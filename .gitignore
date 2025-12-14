@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files (keep examples, ignore actual env files)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+backend/.env
+admin-web/.env.local
+mobile-app/.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Prisma
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# Expo
+mobile-app/.expo/
+mobile-app/dist/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Debug scripts (we created these for debugging)
+backend/check-members.js
+backend/fix-member-links.js

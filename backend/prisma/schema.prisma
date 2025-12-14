@@ -1,0 +1,550 @@
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  PASTOR
+  DEPARTMENT_LEADER
+  VOLUNTEER
+  MEMBER
+}
+
+enum AttendanceMethod {
+  QR
+  MANUAL
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  MOBILE_MONEY
+  ONLINE
+}
+
+enum FollowUpType {
+  NEW_VISITOR
+  INACTIVE_MEMBER
+  GENERAL_PASTORAL
+}
+
+enum FollowUpStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(MEMBER)
+  hashedRt  String?  // Hashed refresh token for secure logout
+  
+  member    Member?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Member {
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
+  email       String?  @unique
+  phone       String?
+  address     String?
+  dateOfBirth DateTime?
+  gender      String?
+  
+  household   Household? @relation(fields: [householdId], references: [id])
+  householdId String?
+  
+  user        User?    @relation(fields: [userId], references: [id])
+  userId      String?  @unique
+
+  departments DepartmentMember[]
+  attendance  AttendanceRecord[]
+  donations   Donation[]
+  followUps   FollowUpTask[]
+  engagement  MemberEngagementScore?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Household {
+  id        String   @id @default(uuid())
+  name      String
+  address   String?
+  members   Member[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Department {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  
+  members     DepartmentMember[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DepartmentMember {
+  id           String     @id @default(uuid())
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId String
+  
+  member       Member     @relation(fields: [memberId], references: [id])
+  memberId     String
+  
+  role         String?    // e.g. LEADER, MEMBER
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([departmentId, memberId])
+}
+
+model ServiceTemplate {
+  id              String   @id @default(uuid())
+  name            String
+  defaultDuration Int      @default(90) // minutes
+  campus          String?
+  
+  occurrences     ServiceOccurrence[]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ServiceOccurrence {
+  id          String          @id @default(uuid())
+  template    ServiceTemplate @relation(fields: [templateId], references: [id])
+  templateId  String
+  
+  date        DateTime
+  startTime   DateTime
+  endTime     DateTime
+  
+  attendance  AttendanceRecord[]
+  
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+model AttendanceRecord {
+  id                  String            @id @default(uuid())
+  member              Member            @relation(fields: [memberId], references: [id])
+  memberId            String
+  
+  serviceOccurrence   ServiceOccurrence @relation(fields: [serviceOccurrenceId], references: [id])
+  serviceOccurrenceId String
+  
+  checkInTime         DateTime          @default(now())
+  method              AttendanceMethod  @default(MANUAL)
+  
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@unique([memberId, serviceOccurrenceId])
+}
+
+model QRTokenUsage {
+  id        String   @id @default(uuid())
+  nonce     String   @unique
+  expiresAt DateTime
+  
+  createdAt DateTime @default(now())
+}
+
+model GivingFund {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  
+  donations   Donation[]
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Donation {
+  id        String        @id @default(uuid())
+  amount    Decimal
+  date      DateTime      @default(now())
+  method    PaymentMethod @default(CASH)
+  
+  fund      GivingFund    @relation(fields: [fundId], references: [id])
+  fundId    String
+  
+  member    Member?       @relation(fields: [memberId], references: [id])
+  memberId  String?
+  
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model FollowUpTask {
+  id         String         @id @default(uuid())
+  type       FollowUpType
+  status     FollowUpStatus @default(OPEN)
+  
+  assigneeId String?        // User ID of the leader/pastor
+  
+  member     Member         @relation(fields: [memberId], references: [id])
+  memberId   String
+  
+  dueDate    DateTime?
+  notes      String?
+  
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+}
+
+model MemberEngagementScore {
+  id               String   @id @default(uuid())
+  
+  member           Member   @relation(fields: [memberId], references: [id])
+  memberId         String   @unique
+  
+  attendanceScore  Int      @default(0)
+  servingScore     Int      @default(0)
+  givingScore      Int      @default(0)
+  
+  lastCalculatedAt DateTime @default(now())
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// ============ NEW MODELS FOR ENTERPRISE FEATURES ============
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String   // CREATE, UPDATE, DELETE
+  entity    String   // Member, Donation, etc.
+  entityId  String
+  changes   Json?    // Before/after values
+  ipAddress String?
+  userAgent String?
+  
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  type      String   @default("info") // info, success, warning, error
+  read      Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+model MessageTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  type        String   // birthday, welcome, reminder, announcement, custom
+  subject     String?  // For emails
+  body        String   @db.Text
+  variables   String[] // Available placeholders like firstName, serviceName
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum MessageChannel {
+  NOTIFICATION
+  EMAIL
+  SMS
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model Message {
+  id              String         @id @default(uuid())
+  subject         String
+  body            String         @db.Text
+  channel         MessageChannel @default(NOTIFICATION)
+  type            String         @default("announcement") // birthday, welcome, reminder, announcement
+  
+  recipientType   String         // all, department, individual, birthday
+  departmentId    String?        // If sending to a department
+  
+  recipients      MessageRecipient[]
+  
+  sentById        String         // User ID who sent it
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([sentById])
+  @@index([createdAt])
+}
+
+model MessageRecipient {
+  id          String        @id @default(uuid())
+  message     Message       @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId   String
+  
+  memberId    String
+  memberName  String        // Denormalized for quick access
+  memberEmail String?
+  memberPhone String?
+  
+  status      MessageStatus @default(PENDING)
+  sentAt      DateTime?
+  error       String?
+  
+  createdAt   DateTime      @default(now())
+
+  @@index([messageId])
+  @@index([memberId])
+}
+
+// ============ GROUPS / SMALL GROUPS ============
+
+enum GroupType {
+  SMALL_GROUP
+  BIBLE_STUDY
+  PRAYER_GROUP
+  FELLOWSHIP
+  OUTREACH
+  OTHER
+}
+
+model Group {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  type        GroupType   @default(SMALL_GROUP)
+  
+  meetingDay  String?     // e.g., "Wednesday"
+  meetingTime String?     // e.g., "7:00 PM"
+  location    String?
+  
+  leaderId    String?     // Member ID of the group leader
+  
+  members     GroupMember[]
+  
+  isActive    Boolean     @default(true)
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model GroupMember {
+  id        String   @id @default(uuid())
+  
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String
+  
+  memberId  String
+  
+  role      String   @default("MEMBER") // LEADER, MEMBER
+  
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@unique([groupId, memberId])
+  @@index([groupId])
+  @@index([memberId])
+}
+
+// ============ LIVE SUPPORT CHAT ============
+
+enum ChatStatus {
+  OPEN
+  CLOSED
+}
+
+model Chat {
+  id          String      @id @default(uuid())
+  
+  userId      String      // The user who initiated the chat
+  userEmail   String      // Denormalized for quick display
+  userName    String?     // Denormalized for quick display
+  
+  subject     String?     // Optional subject/topic
+  status      ChatStatus  @default(OPEN)
+  isEscalated Boolean     @default(false) // True when user requests admin
+  
+  assignedTo  String?     // Admin user ID who is handling this chat
+  
+  messages    ChatMessage[]
+  
+  lastMessageAt DateTime  @default(now())
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([assignedTo])
+  @@index([lastMessageAt])
+  @@index([isEscalated])
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chatId    String
+  
+  senderId  String   // User ID of sender
+  senderName String  // Denormalized
+  isAdmin   Boolean  @default(false) // True if sent by admin
+  
+  content   String   @db.Text
+  
+  // File attachment support
+  attachmentUrl   String?
+  attachmentType  String?  // image, document, audio, video
+  attachmentName  String?
+  
+  readAt    DateTime? // When the recipient read the message
+  
+  createdAt DateTime @default(now())
+
+  @@index([chatId])
+  @@index([createdAt])
+}
+
+// ============ DIRECT MESSAGING BETWEEN MEMBERS ============
+
+model DirectConversation {
+  id            String    @id @default(uuid())
+  
+  participant1Id String   // User ID
+  participant2Id String   // User ID
+  
+  messages      DirectMessage[]
+  
+  lastMessageAt DateTime @default(now())
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([participant1Id, participant2Id])
+  @@index([participant1Id])
+  @@index([participant2Id])
+  @@index([lastMessageAt])
+}
+
+model DirectMessage {
+  id              String   @id @default(uuid())
+  
+  conversation    DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  conversationId  String
+  
+  senderId        String
+  senderName      String
+  
+  content         String   @db.Text
+  
+  attachmentUrl   String?
+  attachmentType  String?
+  attachmentName  String?
+  
+  readAt          DateTime?
+  
+  createdAt       DateTime @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+// ============ GROUP & DEPARTMENT CHAT ============
+
+enum GroupChatType {
+  GROUP
+  DEPARTMENT
+}
+
+model GroupChat {
+  id            String        @id @default(uuid())
+  
+  type          GroupChatType
+  groupId       String?       // If type is GROUP
+  departmentId  String?       // If type is DEPARTMENT
+  
+  name          String        // Denormalized for quick display
+  
+  messages      GroupChatMessage[]
+  
+  lastMessageAt DateTime      @default(now())
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([type, groupId])
+  @@unique([type, departmentId])
+  @@index([type])
+  @@index([lastMessageAt])
+}
+
+model GroupChatMessage {
+  id          String    @id @default(uuid())
+  
+  chat        GroupChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chatId      String
+  
+  senderId    String    // User ID
+  senderName  String    // Denormalized
+  memberId    String?   // Member ID for profile linking
+  
+  content     String    @db.Text
+  
+  // Attachments
+  attachmentUrl   String?
+  attachmentType  String?  // image, document, audio, video
+  attachmentName  String?
+  
+  createdAt   DateTime  @default(now())
+
+  readBy      GroupChatReadReceipt[]
+  
+  @@index([chatId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+model GroupChatReadReceipt {
+  id        String   @id @default(uuid())
+  
+  message   GroupChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String
+  
+  userId    String   // User who read the message
+  readAt    DateTime @default(now())
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
+}
