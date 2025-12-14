@@ -25,6 +25,7 @@ import { ChatModule } from './chat/chat.module';
 import { UploadModule } from './upload/upload.module';
 import { DirectMessagesModule } from './direct-messages/direct-messages.module';
 import { GroupChatModule } from './group-chat/group-chat.module';
+import { SeedModule } from './seed/seed.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -58,6 +59,7 @@ import { GroupChatModule } from './group-chat/group-chat.module';
     UploadModule,
     DirectMessagesModule,
     GroupChatModule,
+    SeedModule,
   ],
   providers: [
     {
