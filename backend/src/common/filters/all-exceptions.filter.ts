@@ -7,7 +7,7 @@ import {
     Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -17,7 +17,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const ctx = host.switchToHttp();
         const response = ctx.getResponse<Response>();
         const request = ctx.getRequest<Request>();
-        const requestId = uuidv4();
+        const requestId = randomUUID();
 
         const status =
             exception instanceof HttpException
