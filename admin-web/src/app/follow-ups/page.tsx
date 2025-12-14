@@ -664,7 +664,7 @@ function CreateFollowUpModal({
                             required
                             className="input-modern w-full"
                             value={form.type}
-                            onChange={(e) => setForm({ ...form, type: e.target.value })}
+                            onChange={(e) => setForm({ ...form, type: e.target.value as 'NEW_VISITOR' | 'INACTIVE_MEMBER' | 'GENERAL_PASTORAL' })}
                         >
                             {TASK_TYPES.map(t => (
                                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -789,8 +789,8 @@ function TaskDetailModal({
                                 key={col.id}
                                 onClick={() => onStatusChange(col.id)}
                                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${task.status === col.id
-                                        ? `bg-gradient-to-r ${col.color} ${col.borderColor} border`
-                                        : 'glass-card hover:scale-105'
+                                    ? `bg-gradient-to-r ${col.color} ${col.borderColor} border`
+                                    : 'glass-card hover:scale-105'
                                     }`}
                                 style={{ color: 'var(--foreground)' }}
                             >
