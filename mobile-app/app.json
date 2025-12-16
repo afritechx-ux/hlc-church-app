@@ -38,9 +38,11 @@
       ]
     ],
     "extra": {
+      "apiUrl": "https://hlc-church-app.onrender.com",
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "a933ba00-93e4-420f-97ae-6823367a2476"
       }
-    }
+    },
+    "owner": "endtime"
   }
 }

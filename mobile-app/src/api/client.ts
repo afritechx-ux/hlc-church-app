@@ -1,11 +1,24 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-// Android Emulator: 10.0.2.2
-// iOS Simulator: localhost
-// Physical Device: LAN IP (Update this if testing on device)
-const BASE_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3333' : 'http://localhost:3333';
+// Production URL from environment variable (set during EAS build)
+// Falls back to local development URLs for emulators
+const getBaseUrl = () => {
+    // Check for environment variable first (production builds)
+    const envUrl = Constants.expoConfig?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL;
+    if (envUrl) {
+        return envUrl;
+    }
+
+    // Fallback for local development
+    // Android Emulator: 10.0.2.2
+    // iOS Simulator: localhost
+    return Platform.OS === 'android' ? 'http://10.0.2.2:3333' : 'http://localhost:3333';
+};
+
+const BASE_URL = getBaseUrl();
 
 const client = axios.create({
     baseURL: BASE_URL,

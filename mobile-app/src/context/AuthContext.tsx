@@ -36,7 +36,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     async function signIn(email: string, password: string) {
         try {
-            const { data } = await client.post('/auth/local/signin', { email, password });
+            const { data } = await client.post('/auth/local/signin', {
+                email: email.trim().toLowerCase(),
+                password
+            });
             await SecureStore.setItemAsync('accessToken', data.access_token);
             await SecureStore.setItemAsync('refreshToken', data.refresh_token);
 
