@@ -331,6 +331,7 @@ export class DirectMessagesService {
 
     // Get a specific conversation with messages (admin)
     async getConversationAsAdmin(conversationId: string) {
+        console.log(`[Admin] Fetching conversation ${conversationId}`);
         const conversation = await this.prisma.directConversation.findUnique({
             where: { id: conversationId },
             include: {
@@ -341,6 +342,7 @@ export class DirectMessagesService {
         });
 
         if (!conversation) {
+            console.error(`[Admin] Conversation ${conversationId} not found`);
             throw new NotFoundException('Conversation not found');
         }
 
@@ -356,6 +358,9 @@ export class DirectMessagesService {
             }),
         ]);
 
+        if (!user1) console.warn(`[Admin] User 1 (${conversation.participant1Id}) not found for chat ${conversationId}`);
+        if (!user2) console.warn(`[Admin] User 2 (${conversation.participant2Id}) not found for chat ${conversationId}`);
+
         return {
             ...conversation,
             participant1: {
@@ -363,14 +368,14 @@ export class DirectMessagesService {
                 name: user1?.member
                     ? `${user1.member.firstName} ${user1.member.lastName}`
                     : user1?.email?.split('@')[0] || 'Unknown',
-                email: user1?.email,
+                email: user1?.email || '', // Ensure string
             },
             participant2: {
                 id: conversation.participant2Id,
                 name: user2?.member
                     ? `${user2.member.firstName} ${user2.member.lastName}`
                     : user2?.email?.split('@')[0] || 'Unknown',
-                email: user2?.email,
+                email: user2?.email || '', // Ensure string
             },
         };
     }

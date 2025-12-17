@@ -6,65 +6,66 @@ import { useColorScheme } from 'react-native';
 // These colors reflect the Higher Life Chapel brand
 
 // Light theme colors
+// Light theme colors
 export const lightColors = {
-    primary: '#001F3F', // Deep Navy Blue (from logo)
-    primaryDark: '#001428', // Darker Navy
-    primaryLight: '#003366', // Lighter Navy
-    secondary: '#FFBF00', // Golden Yellow (from logo)
-    accent: '#FFD700', // Gold accent
+    primary: '#0F2027', // Deepest Navy/Black-blue
+    primaryDark: '#000000',
+    primaryLight: '#203A43', // Teal-ish Navy
+    secondary: '#FFD700', // Pure Gold
+    accent: '#FFA500', // Orange Gold
 
-    success: '#10b981', // Emerald 500
-    warning: '#f59e0b', // Amber 500
-    error: '#ef4444', // Red 500
-    info: '#3b82f6', // Blue 500
+    success: '#059669',
+    warning: '#f59e0b',
+    error: '#ef4444',
+    info: '#3b82f6',
 
-    background: '#f8fafc', // Slate 50
-    surface: '#ffffff',
-    surfaceElevated: '#ffffff',
+    background: '#F8FAFC',
+    surface: '#FFFFFF',
+    surfaceElevated: '#FFFFFF',
 
-    text: '#0f172a', // Slate 900
-    textSecondary: '#64748b', // Slate 500
-    textMuted: '#94a3b8', // Slate 400
-    textOnPrimary: '#ffffff',
+    text: '#1E293B',
+    textSecondary: '#64748B',
+    textMuted: '#94A3B8',
+    textOnPrimary: '#FFFFFF',
 
-    border: '#e2e8f0', // Slate 200
-    divider: '#f1f5f9', // Slate 100
-    inputBackground: '#f1f5f9', // Slate 100
+    border: '#E2E8F0',
+    divider: '#F1F5F9',
+    inputBackground: '#F8FAFC',
 
-    card: '#ffffff',
-    cardShadow: 'rgba(0, 31, 63, 0.15)',
-    tabBarBackground: '#ffffff',
+    card: '#FFFFFF',
+    cardShadow: 'rgba(15, 32, 39, 0.12)',
+    tabBarBackground: '#FFFFFF',
 };
 
 // Dark theme colors
 export const darkColors = {
-    primary: '#3B82F6', // Brighter Blue for dark mode visibility
-    primaryDark: '#001F3F', // Original Deep Navy
-    primaryLight: '#60a5fa', // Light Blue
-    secondary: '#FFBF00', // Golden Yellow (from logo)
-    accent: '#FFD700', // Gold accent
+    primary: '#4F46E5', // Indigo for readability
+    primaryDark: '#0F2027',
+    primaryLight: '#2C5364',
+    secondary: '#FFD700',
+    accent: '#FFA500',
 
-    success: '#34d399', // Emerald 400
-    warning: '#fbbf24', // Amber 400
-    error: '#f87171', // Red 400
-    info: '#60a5fa', // Blue 400
+    success: '#10b981',
+    warning: '#fbbf24',
+    error: '#f87171',
+    info: '#60a5fa',
 
-    background: '#0f172a', // Slate 900
-    surface: '#1e293b', // Slate 800
-    surfaceElevated: '#334155', // Slate 700
+    background: '#0F172A',
+    surface: '#1E293B',
+    surfaceElevated: '#334155',
 
-    text: '#f1f5f9', // Slate 100
-    textSecondary: '#94a3b8', // Slate 400
-    textMuted: '#64748b', // Slate 500
-    textOnPrimary: '#ffffff',
+    text: '#F1F5F9',
+    textSecondary: '#94A3B8',
+    textMuted: '#64748B',
+    textOnPrimary: '#FFFFFF',
 
-    border: '#334155', // Slate 700
-    divider: '#1e293b', // Slate 800
-    inputBackground: '#1e293b', // Slate 800
+    border: '#1E293B',
+    divider: '#1E293B',
+    inputBackground: '#1E293B',
 
-    card: '#1e293b', // Slate 800
-    cardShadow: 'rgba(0, 0, 0, 0.3)',
-    tabBarBackground: '#1e293b', // Slate 800
+    card: '#1E293B',
+    cardShadow: 'rgba(0, 0, 0, 0.4)',
+    tabBarBackground: '#1E293B',
 };
 
 export type ThemeColors = typeof lightColors;
@@ -82,47 +83,47 @@ export const spacing = {
 // Border radius system
 export const borderRadius = {
     s: 8,
-    m: 12,
-    l: 16,
-    xl: 24,
+    m: 16,
+    l: 24,
+    xl: 32,
     full: 9999,
 };
 
 // Shadow system
 export const shadows = {
     small: {
-        shadowColor: '#001F3F',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 2,
-        elevation: 1,
+        shadowColor: '#0F2027',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
     },
     medium: {
-        shadowColor: '#001F3F',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 3,
+        shadowColor: '#0F2027',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.12,
+        shadowRadius: 12,
+        elevation: 4,
     },
     large: {
-        shadowColor: '#001F3F',
-        shadowOffset: { width: 0, height: 8 },
+        shadowColor: '#0F2027',
+        shadowOffset: { width: 0, height: 12 },
         shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 6,
+        shadowRadius: 24,
+        elevation: 10,
     },
     glow: (color: string) => ({
         shadowColor: color,
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.25,
+        shadowRadius: 16,
         elevation: 8,
     }),
     gold: {
-        shadowColor: '#FFBF00',
-        shadowOffset: { width: 0, height: 4 },
+        shadowColor: '#FFD700',
+        shadowOffset: { width: 0, height: 6 },
         shadowOpacity: 0.3,
-        shadowRadius: 12,
+        shadowRadius: 16,
         elevation: 6,
     },
 };
@@ -130,22 +131,22 @@ export const shadows = {
 // Typography system
 export const createTypography = (colors: ThemeColors) => ({
     h1: {
-        fontSize: 32,
-        fontWeight: 'bold' as const,
+        fontSize: 34,
+        fontWeight: '800' as const,
+        color: colors.text,
+        letterSpacing: -1,
+    },
+    h2: {
+        fontSize: 28,
+        fontWeight: '700' as const,
         color: colors.text,
         letterSpacing: -0.5,
     },
-    h2: {
-        fontSize: 24,
-        fontWeight: 'bold' as const,
-        color: colors.text,
-        letterSpacing: -0.3,
-    },
     h3: {
-        fontSize: 20,
-        fontWeight: '600' as const,
+        fontSize: 22,
+        fontWeight: '700' as const,
         color: colors.text,
-        letterSpacing: -0.2,
+        letterSpacing: -0.5,
     },
     body: {
         fontSize: 16,
@@ -161,22 +162,24 @@ export const createTypography = (colors: ThemeColors) => ({
         fontSize: 12,
         color: colors.textMuted,
         lineHeight: 16,
+        textTransform: 'uppercase' as const,
+        letterSpacing: 1,
     },
     button: {
         fontSize: 16,
-        fontWeight: '600' as const,
+        fontWeight: '700' as const,
         letterSpacing: 0.5,
     },
 });
 
 // Brand gradients based on logo
 export const brandGradients = {
-    primary: ['#001F3F', '#003366'], // Navy gradient
-    secondary: ['#FFBF00', '#FFD700'], // Gold gradient
-    accent: ['#001F3F', '#FFBF00'], // Navy to Gold
-    header: ['#001F3F', '#002952', '#003366'], // Rich navy gradient
-    button: ['#001F3F', '#002952'], // Button gradient
-    gold: ['#FFBF00', '#F5A623', '#FFD700'], // Rich gold gradient
+    primary: ['#0F2027', '#203A43', '#2C5364'], // "Deep Space"
+    secondary: ['#FFD700', '#FDB931'], // "Macbeth Gold"
+    accent: ['#0F2027', '#FFD700'], // Navy to Gold
+    header: ['#0F2027', '#203A43'],
+    button: ['#0F2027', '#203A43'],
+    gold: ['#FDB931', '#FFD700', '#FDB931'], // Metallic Gold
 };
 
 // For backwards compatibility

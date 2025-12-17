@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     Text,
@@ -13,6 +13,7 @@ import {
     Alert,
     Image,
     ActionSheetIOS,
+    StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
@@ -21,16 +22,13 @@ import {
     Send,
     ArrowLeft,
     Bot,
-    User,
-    Clock,
-    CheckCheck,
-    Paperclip,
-    Smile,
     Phone,
     Video,
     UserCog,
-    Image as ImageIcon,
+    Paperclip,
+    Smile,
     FileText,
+    CheckCheck,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
@@ -84,15 +82,12 @@ export default function ChatScreen({ navigation }: any) {
     const typingAnim = useRef(new Animated.Value(0)).current;
     const lastMessageTime = useRef<string | null>(null);
 
-    // API base URL for uploads
     const API_BASE = client.defaults.baseURL?.replace('/api', '') || 'http://localhost:3333';
 
-    // Initialize chat on mount
     useEffect(() => {
         initializeChat();
     }, []);
 
-    // Poll for new messages when chat exists
     useEffect(() => {
         if (!chat?.id) return;
 
@@ -119,11 +114,10 @@ export default function ChatScreen({ navigation }: any) {
             }
         };
 
-        const interval = setInterval(pollMessages, 2000);
+        const interval = setInterval(pollMessages, 3000);
         return () => clearInterval(interval);
     }, [chat?.id]);
 
-    // Typing animation
     useEffect(() => {
         if (isTyping) {
             Animated.loop(
@@ -146,9 +140,10 @@ export default function ChatScreen({ navigation }: any) {
             if (data.messages?.length > 0) {
                 lastMessageTime.current = data.messages[data.messages.length - 1].createdAt;
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to initialize chat:', error);
-            Alert.alert('Error', 'Failed to connect to chat. Please try again.');
+            const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+            Alert.alert('Connection Error', `Failed to connect: ${errorMessage}`);
         } finally {
             setLoading(false);
         }
@@ -178,11 +173,10 @@ export default function ChatScreen({ navigation }: any) {
                 content: text.trim()
             });
 
-            // Replace temp message with real one
             setMessages(prev => prev.map(m => m.id === tempId ? data : m));
             lastMessageTime.current = data.createdAt;
 
-            // Fetch latest to get AI response
+            // Artificial delay for AI/Admin 'typing' simulation
             setTimeout(async () => {
                 setIsTyping(false);
                 try {
@@ -194,7 +188,8 @@ export default function ChatScreen({ navigation }: any) {
                 } catch (e) {
                     console.log('Failed to refresh:', e);
                 }
-            }, 1500);
+            }, 1000);
+
         } catch (error) {
             console.error('Failed to send message:', error);
             setMessages(prev => prev.filter(m => m.id !== tempId));
@@ -213,7 +208,6 @@ export default function ChatScreen({ navigation }: any) {
         return new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
-    // Handle call buttons - Coming Soon
     const handleCall = (type: 'voice' | 'video') => {
         Alert.alert(
             'Coming Soon',
@@ -222,12 +216,10 @@ export default function ChatScreen({ navigation }: any) {
         );
     };
 
-    // Handle emoji selection
     const handleEmojiSelect = (emoji: string) => {
         setInputText(prev => prev + emoji);
     };
 
-    // Handle attachment button - show options
     const handleAttachment = () => {
         if (Platform.OS === 'ios') {
             ActionSheetIOS.showActionSheetWithOptions(
@@ -251,7 +243,6 @@ export default function ChatScreen({ navigation }: any) {
         }
     };
 
-    // Pick image from library
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
@@ -270,7 +261,6 @@ export default function ChatScreen({ navigation }: any) {
         }
     };
 
-    // Take photo with camera
     const takePhoto = async () => {
         const { status } = await ImagePicker.requestCameraPermissionsAsync();
         if (status !== 'granted') {
@@ -288,7 +278,6 @@ export default function ChatScreen({ navigation }: any) {
         }
     };
 
-    // Pick document
     const pickDocument = async () => {
         try {
             const result = await DocumentPicker.getDocumentAsync({
@@ -303,13 +292,11 @@ export default function ChatScreen({ navigation }: any) {
         }
     };
 
-    // Upload file and send as message
     const uploadAndSendAttachment = async (uri: string, type: string, name?: string) => {
         if (!chat?.id) return;
 
         setUploading(true);
         try {
-            // Create form data for upload
             const formData = new FormData();
             const filename = name || uri.split('/').pop() || 'attachment';
             const match = /\.(\w+)$/.exec(filename);
@@ -321,14 +308,12 @@ export default function ChatScreen({ navigation }: any) {
                 type: fileType,
             } as any);
 
-            // Upload file
             const uploadResponse = await client.post('/upload', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
 
             const { url, type: attachmentType, name: attachmentName } = uploadResponse.data;
 
-            // Send message with attachment
             const { data } = await client.post(`/chat/${chat.id}/messages`, {
                 content: type === 'image' ? '📷 Image' : `📄 ${attachmentName || 'Document'}`,
                 attachmentUrl: url,
@@ -375,7 +360,6 @@ export default function ChatScreen({ navigation }: any) {
                         !isFirst && !isUser && { marginLeft: 40 },
                     ]}
                 >
-                    {/* Image Attachment */}
                     {hasImage && (
                         <Image
                             source={{ uri: `${API_BASE}${item.attachmentUrl}` }}
@@ -384,7 +368,6 @@ export default function ChatScreen({ navigation }: any) {
                         />
                     )}
 
-                    {/* Document Attachment */}
                     {hasDocument && (
                         <View style={styles.documentAttachment}>
                             <FileText size={20} color={isUser ? '#fff' : colors.primary} />
@@ -397,7 +380,6 @@ export default function ChatScreen({ navigation }: any) {
                         </View>
                     )}
 
-                    {/* Message Text (hide if just an attachment marker) */}
                     {(!hasImage || item.content !== '📷 Image') && (
                         <Text style={[styles.messageText, { color: isUser ? '#fff' : colors.text }]}>
                             {item.content}
@@ -443,6 +425,7 @@ export default function ChatScreen({ navigation }: any) {
     if (loading) {
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+                <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={colors.primary} />
                     <Text style={[styles.loadingText, { color: colors.textMuted }]}>Connecting to chat...</Text>
@@ -453,9 +436,11 @@ export default function ChatScreen({ navigation }: any) {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <StatusBar barStyle="light-content" />
+
             {/* Header */}
             <LinearGradient
-                colors={[colors.primary, colors.primaryDark]}
+                colors={theme.gradients.primary as any}
                 style={styles.header}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -487,7 +472,6 @@ export default function ChatScreen({ navigation }: any) {
                 </View>
             </LinearGradient>
 
-            {/* Escalation Banner */}
             {chat?.isEscalated && (
                 <View style={[styles.escalationBanner, { backgroundColor: '#fef3c7' }]}>
                     <UserCog size={16} color="#92400e" />
@@ -495,10 +479,10 @@ export default function ChatScreen({ navigation }: any) {
                 </View>
             )}
 
-            {/* Messages */}
             <KeyboardAvoidingView
                 style={styles.flex}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
             >
                 <FlatList
                     ref={flatListRef}
@@ -511,7 +495,6 @@ export default function ChatScreen({ navigation }: any) {
                     onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
                 />
 
-                {/* Quick Replies */}
                 {messages.length <= 2 && (
                     <View style={styles.quickRepliesContainer}>
                         <FlatList
@@ -540,7 +523,6 @@ export default function ChatScreen({ navigation }: any) {
                     </View>
                 )}
 
-                {/* Input Bar */}
                 <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.divider }]}>
                     <TouchableOpacity
                         style={styles.inputAction}
@@ -587,7 +569,6 @@ export default function ChatScreen({ navigation }: any) {
                 </View>
             </KeyboardAvoidingView>
 
-            {/* Emoji Picker Modal */}
             <EmojiPicker
                 visible={showEmojiPicker}
                 onClose={() => setShowEmojiPicker(false)}

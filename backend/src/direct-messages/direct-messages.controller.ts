@@ -11,6 +11,8 @@ import { DirectMessagesService } from './direct-messages.service';
 import { CreateConversationDto, SendDirectMessageDto } from './dto';
 import { AtGuard } from '../common/guards/at.guard';
 import { GetCurrentUser } from '../common/decorators/get-current-user.decorator';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @UseGuards(AtGuard)
 @Controller('direct-messages')
@@ -81,18 +83,24 @@ export class DirectMessagesController {
 
     // Get all conversations (admin oversight)
     @Get('admin/all')
+    @UseGuards(RolesGuard)
+    @Roles('SUPER_ADMIN', 'ADMIN', 'PASTOR')
     async getAllConversationsAdmin(@Query('search') search?: string) {
         return this.dmService.getAllConversationsAdmin(search);
     }
 
     // Get a specific conversation as admin
     @Get('admin/conversation/:id')
+    @UseGuards(RolesGuard)
+    @Roles('SUPER_ADMIN', 'ADMIN', 'PASTOR')
     async getConversationAsAdmin(@Param('id') conversationId: string) {
         return this.dmService.getConversationAsAdmin(conversationId);
     }
 
     // Send message as admin (intervention in member DMs)
     @Post('admin/conversation/:id/messages')
+    @UseGuards(RolesGuard)
+    @Roles('SUPER_ADMIN', 'ADMIN', 'PASTOR')
     async sendMessageAsAdmin(
         @Param('id') conversationId: string,
         @GetCurrentUser('sub') adminId: string,

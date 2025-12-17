@@ -20,7 +20,7 @@ import DirectMessagesScreen from '../screens/DirectMessagesScreen';
 import DirectChatScreen from '../screens/DirectChatScreen';
 import GroupChatScreen from '../screens/GroupChatScreen';
 import { Home, History, User, DollarSign } from 'lucide-react-native';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, Platform } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -33,48 +33,88 @@ function AppTabs() {
         <Tab.Navigator
             screenOptions={{
                 headerShown: false,
-                tabBarActiveTintColor: colors.primary,
-                tabBarInactiveTintColor: colors.textMuted,
+                tabBarActiveTintColor: colors.secondary, // Gold for active
+                tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)',
                 tabBarStyle: {
-                    backgroundColor: colors.tabBarBackground,
-                    borderTopColor: colors.border,
-                    borderTopWidth: 1,
-                    paddingTop: 8,
-                    paddingBottom: 8,
-                    height: 60,
+                    backgroundColor: '#0F2027', // Deep Navy background
+                    borderTopWidth: 0,
+                    height: Platform.OS === 'ios' ? 90 : 70, // Taller for modern look
+                    paddingTop: 12,
+                    paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+                    elevation: 10,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: -4 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 12,
                 },
                 tabBarLabelStyle: {
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: '600',
+                    marginTop: 4,
                 },
+                tabBarBackground: () => (
+                    <View style={{ flex: 1, backgroundColor: '#0F2027' }} />
+                ),
             }}
         >
             <Tab.Screen
                 name="Home"
                 component={HomeScreen}
                 options={{
-                    tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <View style={{
+                            backgroundColor: focused ? 'rgba(255, 215, 0, 0.15)' : 'transparent',
+                            padding: 8,
+                            borderRadius: 12,
+                        }}>
+                            <Home color={color} size={size} strokeWidth={focused ? 2.5 : 2} />
+                        </View>
+                    ),
                 }}
             />
             <Tab.Screen
                 name="History"
                 component={HistoryScreen}
                 options={{
-                    tabBarIcon: ({ color, size }) => <History color={color} size={size} />,
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <View style={{
+                            backgroundColor: focused ? 'rgba(255, 215, 0, 0.15)' : 'transparent',
+                            padding: 8,
+                            borderRadius: 12,
+                        }}>
+                            <History color={color} size={size} strokeWidth={focused ? 2.5 : 2} />
+                        </View>
+                    ),
                 }}
             />
             <Tab.Screen
                 name="Giving"
                 component={GivingScreen}
                 options={{
-                    tabBarIcon: ({ color, size }) => <DollarSign color={color} size={size} />,
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <View style={{
+                            backgroundColor: focused ? 'rgba(255, 215, 0, 0.15)' : 'transparent',
+                            padding: 8,
+                            borderRadius: 12,
+                        }}>
+                            <DollarSign color={color} size={size} strokeWidth={focused ? 2.5 : 2} />
+                        </View>
+                    ),
                 }}
             />
             <Tab.Screen
                 name="Profile"
                 component={ProfileScreen}
                 options={{
-                    tabBarIcon: ({ color, size }) => <User color={color} size={size} />,
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <View style={{
+                            backgroundColor: focused ? 'rgba(255, 215, 0, 0.15)' : 'transparent',
+                            padding: 8,
+                            borderRadius: 12,
+                        }}>
+                            <User color={color} size={size} strokeWidth={focused ? 2.5 : 2} />
+                        </View>
+                    ),
                 }}
             />
         </Tab.Navigator>

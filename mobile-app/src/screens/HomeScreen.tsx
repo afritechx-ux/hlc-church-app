@@ -8,6 +8,9 @@ import {
     RefreshControl,
     Animated,
     Dimensions,
+    ImageBackground,
+    Platform,
+    StatusBar
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -25,6 +28,8 @@ import {
     Heart,
     Users,
     MessageCircle,
+    ArrowRight,
+    MapPin
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import api from '../api/client';
@@ -32,32 +37,31 @@ import api from '../api/client';
 const { width } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }: any) {
-    const { user, signOut } = useAuth();
+    const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const colors = theme.colors;
     const [refreshing, setRefreshing] = useState(false);
-    const [stats, setStats] = useState({ streak: 3, thisMonth: 12, totalGiving: 0 });
     const [nextService, setNextService] = useState<any>(null);
     const [greeting, setGreeting] = useState('Hello');
 
     // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(30)).current;
+    const slideAnim = useRef(new Animated.Value(20)).current;
 
     useEffect(() => {
         fetchData();
         updateGreeting();
 
-        // Entrance animation
         Animated.parallel([
             Animated.timing(fadeAnim, {
                 toValue: 1,
-                duration: 600,
+                duration: 800,
                 useNativeDriver: true,
             }),
-            Animated.timing(slideAnim, {
+            Animated.spring(slideAnim, {
                 toValue: 0,
-                duration: 600,
+                friction: 8,
+                tension: 40,
                 useNativeDriver: true,
             }),
         ]).start();
@@ -95,246 +99,155 @@ export default function HomeScreen({ navigation }: any) {
         setRefreshing(false);
     };
 
-    const QuickActionCard = ({ icon: Icon, label, sublabel, gradient, onPress }: any) => (
-        <TouchableOpacity style={styles.quickActionCard} onPress={onPress} activeOpacity={0.8}>
-            <LinearGradient
-                colors={gradient}
-                style={styles.quickActionGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            >
-                <View style={styles.quickActionIconBg}>
-                    <Icon size={24} color="#fff" />
-                </View>
-                <Text style={styles.quickActionLabel}>{label}</Text>
-                <Text style={styles.quickActionSublabel}>{sublabel}</Text>
-            </LinearGradient>
+    const QuickActionItem = ({ icon: Icon, label, onPress, color }: any) => (
+        <TouchableOpacity style={styles.actionItem} onPress={onPress}>
+            <View style={[styles.actionIconContainer, { backgroundColor: color + '15' }]}>
+                <Icon size={24} color={color} />
+            </View>
+            <Text style={[styles.actionLabel, { color: colors.text }]}>{label}</Text>
         </TouchableOpacity>
     );
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            {/* Header */}
-            <Animated.View
-                style={[
-                    styles.header,
-                    {
-                        backgroundColor: colors.surface,
-                        borderBottomColor: colors.border,
-                        opacity: fadeAnim,
-                    },
-                ]}
-            >
-                <View>
-                    <Text style={[styles.greeting, { color: colors.textSecondary }]}>{greeting}</Text>
-                    <Text style={[styles.userName, { color: colors.text }]}>
-                        {user?.firstName} {user?.lastName}
-                    </Text>
-                </View>
-                <View style={styles.headerActions}>
-                    <TouchableOpacity
-                        onPress={toggleTheme}
-                        style={[styles.iconButton, { backgroundColor: colors.inputBackground }]}
-                    >
-                        {theme.isDark ? (
-                            <Sun size={22} color={colors.warning} />
-                        ) : (
-                            <Moon size={22} color={colors.primary} />
-                        )}
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.iconButton, { backgroundColor: colors.inputBackground }]}
-                    >
-                        <View style={styles.notificationDot} />
-                        <Bell size={22} color={colors.textSecondary} />
-                    </TouchableOpacity>
-                </View>
-            </Animated.View>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+            <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
 
-            <ScrollView
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        tintColor={colors.primary}
-                    />
-                }
-            >
-                {/* Hero Section - Next Service */}
-                <Animated.View
-                    style={{
-                        opacity: fadeAnim,
-                        transform: [{ translateY: slideAnim }],
-                    }}
-                >
-                    <TouchableOpacity activeOpacity={0.9}>
-                        <LinearGradient
-                            colors={['#001F3F', '#002952', '#003366']}
-                            style={styles.heroCard}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
+            {/* Background Decor */}
+            <View style={[styles.bgDecorCircle, { backgroundColor: theme.isDark ? '#1e293b' : '#E2E8F0' }]} />
+
+            <SafeAreaView style={{ flex: 1 }}>
+                {/* Header */}
+                <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+                    <View>
+                        <Text style={[styles.greeting, { color: colors.textSecondary }]}>{greeting},</Text>
+                        <Text style={[styles.userName, { color: colors.text }]}>
+                            {user?.firstName || 'Member'}
+                        </Text>
+                    </View>
+                    <View style={styles.headerRight}>
+                        <TouchableOpacity
+                            onPress={toggleTheme}
+                            style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
                         >
-                            <View style={styles.heroOverlay}>
-                                <View style={styles.heroContent}>
-                                    <View style={styles.heroBadge}>
-                                        <Calendar size={14} color="#fff" />
-                                        <Text style={styles.heroBadgeText}>Next Service</Text>
+                            {theme.isDark ? <Sun size={20} color={colors.secondary} /> : <Moon size={20} color={colors.primary} />}
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                            onPress={() => navigation.navigate('Notifications')}
+                        >
+                            <Bell size={20} color={colors.text} />
+                            <View style={styles.badge} />
+                        </TouchableOpacity>
+                    </View>
+                </Animated.View>
+
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    showsVerticalScrollIndicator={false}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+                    }
+                >
+                    {/* Hero Card - Next Service */}
+                    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+                        <TouchableOpacity activeOpacity={0.95} style={styles.heroCardContainer}>
+                            <LinearGradient
+                                colors={theme.gradients.primary}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={styles.heroCard}
+                            >
+                                <View style={styles.heroHeader}>
+                                    <View style={styles.liveTag}>
+                                        <View style={styles.liveDot} />
+                                        <Text style={styles.liveText}>UPCOMING</Text>
                                     </View>
-                                    <Text style={styles.heroTitle}>
-                                        {nextService?.template?.name || 'Sunday Worship'}
-                                    </Text>
-                                    <View style={styles.heroTimeRow}>
-                                        <Clock size={16} color="rgba(255,255,255,0.8)" />
-                                        <Text style={styles.heroTimeText}>
+                                    <Calendar size={18} color="rgba(255,255,255,0.7)" />
+                                </View>
+
+                                <Text style={styles.serviceTitle}>
+                                    {nextService?.template?.name || 'Sunday Worship Service'}
+                                </Text>
+
+                                <View style={styles.serviceInfoRow}>
+                                    <View style={styles.serviceInfoItem}>
+                                        <Clock size={16} color={colors.secondary} />
+                                        <Text style={styles.serviceInfoText}>
                                             {nextService
                                                 ? new Date(nextService.date).toLocaleDateString('en-US', {
-                                                    weekday: 'long',
-                                                    month: 'short',
-                                                    day: 'numeric',
+                                                    weekday: 'short',
                                                     hour: 'numeric',
                                                     minute: '2-digit'
                                                 })
-                                                : 'Sunday, 9:00 AM'
+                                                : 'Sun, 9:00 AM'
                                             }
                                         </Text>
                                     </View>
+                                    <View style={styles.dividerDot} />
+                                    <View style={styles.serviceInfoItem}>
+                                        <MapPin size={16} color={colors.secondary} />
+                                        <Text style={styles.serviceInfoText}>Main Auditorium</Text>
+                                    </View>
                                 </View>
-                                {/* Decorative circles */}
-                                <View style={styles.heroDecor1} />
-                                <View style={styles.heroDecor2} />
-                            </View>
-                        </LinearGradient>
-                    </TouchableOpacity>
-                </Animated.View>
-
-                {/* Stats Cards */}
-                <View style={styles.statsContainer}>
-                    <View style={[styles.statCard, { backgroundColor: colors.card }]}>
-                        <View style={[styles.statIconBg, { backgroundColor: '#f97316' + '20' }]}>
-                            <Flame size={22} color="#f97316" />
-                        </View>
-                        <Text style={[styles.statValue, { color: colors.text }]}>{stats.streak}</Text>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Week Streak</Text>
-                    </View>
-                    <View style={[styles.statCard, { backgroundColor: colors.card }]}>
-                        <View style={[styles.statIconBg, { backgroundColor: colors.success + '20' }]}>
-                            <TrendingUp size={22} color={colors.success} />
-                        </View>
-                        <Text style={[styles.statValue, { color: colors.text }]}>{stats.thisMonth}</Text>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>This Month</Text>
-                    </View>
-                    <View style={[styles.statCard, { backgroundColor: colors.card }]}>
-                        <View style={[styles.statIconBg, { backgroundColor: colors.primary + '20' }]}>
-                            <Heart size={22} color={colors.primary} />
-                        </View>
-                        <Text style={[styles.statValue, { color: colors.text }]}>85</Text>
-                        <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Score</Text>
-                    </View>
-                </View>
-
-                {/* Check-In Button */}
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
-
-                <TouchableOpacity
-                    style={styles.checkInButton}
-                    onPress={() => navigation.navigate('QRScan')}
-                    activeOpacity={0.9}
-                >
-                    <LinearGradient
-                        colors={['#001F3F', '#002952']}
-                        style={styles.checkInGradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                    >
-                        <View style={styles.checkInContent}>
-                            <View style={styles.checkInIconBg}>
-                                <QrCode size={28} color="#fff" />
-                            </View>
-                            <View style={styles.checkInTextContainer}>
-                                <Text style={styles.checkInTitle}>Check-In Now</Text>
-                                <Text style={styles.checkInSubtitle}>Scan QR code for attendance</Text>
-                            </View>
-                        </View>
-                        <ChevronRight size={24} color="rgba(255,255,255,0.7)" />
-                    </LinearGradient>
-                </TouchableOpacity>
-
-                {/* Quick Actions Grid */}
-                <View style={styles.quickActionsGrid}>
-                    <QuickActionCard
-                        icon={Heart}
-                        label="Give"
-                        sublabel="Donate"
-                        gradient={['#10b981', '#059669']}
-                        onPress={() => navigation.navigate('Giving')}
-                    />
-                    <QuickActionCard
-                        icon={Users}
-                        label="Connect"
-                        sublabel="Groups"
-                        gradient={['#f59e0b', '#d97706']}
-                        onPress={() => navigation.navigate('Groups')}
-                    />
-                    <QuickActionCard
-                        icon={MessageCircle}
-                        label="Messages"
-                        sublabel="Chat"
-                        gradient={['#8b5cf6', '#7c3aed']}
-                        onPress={() => navigation.navigate('DirectMessages')}
-                    />
-                </View>
-
-                {/* Recent Activity */}
-                <View style={[styles.activityCard, { backgroundColor: colors.card }]}>
-                    <View style={styles.activityHeader}>
-                        <Text style={[styles.activityTitle, { color: colors.text }]}>Recent Activity</Text>
-                        <TouchableOpacity onPress={() => navigation.navigate('History')}>
-                            <Text style={[styles.viewAllText, { color: colors.primary }]}>View All</Text>
+                            </LinearGradient>
+                            {/* Card Shadow */}
+                            <View style={[styles.heroShadow, { shadowColor: colors.primary }]} />
                         </TouchableOpacity>
-                    </View>
-                    <View style={styles.activityItem}>
-                        <View style={[styles.activityDot, { backgroundColor: colors.success }]} />
-                        <View style={styles.activityContent}>
-                            <Text style={[styles.activityText, { color: colors.text }]}>
-                                Attended Sunday Service
-                            </Text>
-                            <Text style={[styles.activityTime, { color: colors.textMuted }]}>
-                                Dec 1, 2024
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={styles.activityItem}>
-                        <View style={[styles.activityDot, { backgroundColor: colors.primary }]} />
-                        <View style={styles.activityContent}>
-                            <Text style={[styles.activityText, { color: colors.text }]}>
-                                Made a donation to Building Fund
-                            </Text>
-                            <Text style={[styles.activityTime, { color: colors.textMuted }]}>
-                                Nov 28, 2024
-                            </Text>
-                        </View>
-                    </View>
-                </View>
-            </ScrollView>
+                    </Animated.View>
 
-            {/* Floating Chat Button */}
-            <TouchableOpacity
-                style={styles.floatingChatButton}
-                onPress={() => navigation.navigate('Chat')}
-                activeOpacity={0.9}
-            >
-                <LinearGradient
-                    colors={['#001F3F', '#002952']}
-                    style={styles.floatingChatGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                >
-                    <MessageCircle size={24} color="#fff" />
-                </LinearGradient>
-            </TouchableOpacity>
-        </SafeAreaView>
+                    {/* Quick Access Grid */}
+                    <View style={styles.section}>
+                        <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
+                        <View style={[styles.grid, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                            <QuickActionItem
+                                icon={QrCode}
+                                label="Check-In"
+                                color={colors.primary}
+                                onPress={() => navigation.navigate('QRScan')}
+                            />
+                            <QuickActionItem
+                                icon={Heart}
+                                label="Give"
+                                color={colors.error}
+                                onPress={() => navigation.navigate('Giving')}
+                            />
+                            <QuickActionItem
+                                icon={Users}
+                                label="Groups"
+                                color={colors.warning}
+                                onPress={() => navigation.navigate('Groups')}
+                            />
+                            <QuickActionItem
+                                icon={MessageCircle}
+                                label="Chat"
+                                color={colors.info}
+                                onPress={() => navigation.navigate('DirectMessages')}
+                            />
+                        </View>
+                    </View>
+
+                    {/* Monthly Stats */}
+                    <View style={styles.section}>
+                        <Text style={[styles.sectionTitle, { color: colors.text }]}>Your Activity</Text>
+                        <View style={styles.statsRow}>
+                            <View style={[styles.statBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                                <Text style={[styles.statValue, { color: colors.primary }]}>3</Text>
+                                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Wk Streak</Text>
+                                <Flame size={16} color={colors.warning} style={styles.statIcon} />
+                            </View>
+                            <View style={[styles.statBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                                <Text style={[styles.statValue, { color: colors.primary }]}>12</Text>
+                                <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Attended</Text>
+                                <TrendingUp size={16} color={colors.success} style={styles.statIcon} />
+                            </View>
+                        </View>
+                    </View>
+
+                    {/* Bottom Spacer for Tab Bar */}
+                    <View style={{ height: 100 }} />
+                </ScrollView>
+            </SafeAreaView>
+        </View>
     );
 }
 
@@ -342,298 +255,196 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    bgDecorCircle: {
+        position: 'absolute',
+        top: -100,
+        right: -100,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        opacity: 0.5,
+    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 20,
-        borderBottomWidth: 1,
+        paddingHorizontal: 24,
+        paddingTop: 10,
+        paddingBottom: 20,
     },
     greeting: {
         fontSize: 14,
         fontWeight: '500',
+        marginBottom: 4,
     },
     userName: {
-        fontSize: 26,
-        fontWeight: 'bold',
+        fontSize: 24,
+        fontWeight: '800',
         letterSpacing: -0.5,
     },
-    headerActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-    },
-    iconButton: {
-        width: 46,
-        height: 46,
-        borderRadius: 14,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    notificationDot: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#ef4444',
-        zIndex: 1,
-    },
-    content: {
-        padding: 20,
-        paddingBottom: 40,
-    },
-    heroCard: {
-        borderRadius: 24,
-        marginBottom: 20,
-        overflow: 'hidden',
-    },
-    heroOverlay: {
-        padding: 24,
-        position: 'relative',
-        overflow: 'hidden',
-    },
-    heroContent: {
-        position: 'relative',
-        zIndex: 1,
-    },
-    heroBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 20,
-        alignSelf: 'flex-start',
-        marginBottom: 16,
-    },
-    heroBadgeText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: '600',
-        marginLeft: 6,
-    },
-    heroTitle: {
-        color: '#fff',
-        fontSize: 28,
-        fontWeight: 'bold',
-        marginBottom: 12,
-        letterSpacing: -0.5,
-    },
-    heroTimeRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    heroTimeText: {
-        color: 'rgba(255,255,255,0.85)',
-        fontSize: 15,
-        marginLeft: 8,
-        fontWeight: '500',
-    },
-    heroDecor1: {
-        position: 'absolute',
-        top: -40,
-        right: -40,
-        width: 120,
-        height: 120,
-        borderRadius: 60,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-    },
-    heroDecor2: {
-        position: 'absolute',
-        bottom: -60,
-        right: 40,
-        width: 100,
-        height: 100,
-        borderRadius: 50,
-        backgroundColor: 'rgba(255,255,255,0.08)',
-    },
-    statsContainer: {
+    headerRight: {
         flexDirection: 'row',
         gap: 12,
-        marginBottom: 24,
     },
-    statCard: {
-        flex: 1,
-        borderRadius: 18,
-        padding: 16,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    statIconBg: {
+    iconBtn: {
         width: 44,
         height: 44,
         borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 10,
+        borderWidth: 1,
     },
-    statValue: {
-        fontSize: 24,
-        fontWeight: 'bold',
+    badge: {
+        position: 'absolute',
+        top: 10,
+        right: 12,
+        width: 8,
+        height: 8,
+        backgroundColor: '#ef4444',
+        borderRadius: 4,
+        borderWidth: 1,
+        borderColor: '#fff',
+    },
+    scrollContent: {
+        paddingHorizontal: 24,
+    },
+    heroCardContainer: {
+        marginBottom: 32,
+    },
+    heroCard: {
+        borderRadius: 24,
+        padding: 24,
+        minHeight: 180,
+        justifyContent: 'space-between',
+        zIndex: 2,
+    },
+    heroShadow: {
+        position: 'absolute',
+        bottom: -15,
+        left: 20,
+        right: 20,
+        height: 40,
+        borderRadius: 20,
+        opacity: 0.3,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.5,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    heroHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    liveTag: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 20,
+    },
+    liveDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: '#FFD700',
+        marginRight: 6,
+    },
+    liveText: {
+        color: '#FFD700',
+        fontSize: 10,
+        fontWeight: '700',
+        letterSpacing: 1,
+    },
+    serviceTitle: {
+        color: '#fff',
+        fontSize: 26,
+        fontWeight: '700',
         letterSpacing: -0.5,
+        marginTop: 10,
+        marginBottom: 10,
+        lineHeight: 32,
     },
-    statLabel: {
-        fontSize: 11,
-        marginTop: 4,
+    serviceInfoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    serviceInfoItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    serviceInfoText: {
+        color: 'rgba(255,255,255,0.9)',
+        fontSize: 14,
+        marginLeft: 6,
         fontWeight: '500',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
+    },
+    dividerDot: {
+        width: 4,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: 'rgba(255,255,255,0.3)',
+        marginHorizontal: 12,
+    },
+    section: {
+        marginBottom: 28,
     },
     sectionTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: '700',
         marginBottom: 16,
-        letterSpacing: -0.3,
     },
-    checkInButton: {
-        marginBottom: 16,
-        borderRadius: 18,
-        overflow: 'hidden',
-        shadowColor: '#001F3F',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.35,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-    checkInGradient: {
+    grid: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 20,
+        flexWrap: 'wrap',
+        borderRadius: 24,
+        padding: 16,
+        gap: 16,
+        borderWidth: 1,
     },
-    checkInContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    checkInIconBg: {
-        width: 52,
-        height: 52,
-        borderRadius: 16,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+    actionItem: {
+        width: '46%', // Approximate for 2 columns with gap
+        aspectRatio: 1.1, // Slightly wider than tall
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 16,
+        flexGrow: 1,
     },
-    checkInTextContainer: {
-        flex: 1,
-    },
-    checkInTitle: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 2,
-    },
-    checkInSubtitle: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 13,
-    },
-    quickActionsGrid: {
-        flexDirection: 'row',
-        gap: 12,
-        marginBottom: 24,
-    },
-    quickActionCard: {
-        flex: 1,
-        borderRadius: 18,
-        overflow: 'hidden',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    quickActionGradient: {
-        padding: 20,
-        alignItems: 'center',
-    },
-    quickActionIconBg: {
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+    actionIconContainer: {
+        width: 56,
+        height: 56,
+        borderRadius: 20,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 12,
     },
-    quickActionLabel: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    quickActionSublabel: {
-        color: 'rgba(255,255,255,0.7)',
-        fontSize: 12,
-        marginTop: 2,
-    },
-    activityCard: {
-        borderRadius: 18,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 8,
-        elevation: 3,
-    },
-    activityHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 16,
-    },
-    activityTitle: {
-        fontSize: 18,
-        fontWeight: '700',
-    },
-    viewAllText: {
+    actionLabel: {
         fontSize: 14,
         fontWeight: '600',
     },
-    activityItem: {
+    statsRow: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
-        paddingVertical: 12,
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(0,0,0,0.05)',
+        gap: 16,
     },
-    activityDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        marginTop: 5,
-        marginRight: 12,
-    },
-    activityContent: {
+    statBox: {
         flex: 1,
+        padding: 20,
+        borderRadius: 20,
+        borderWidth: 1,
     },
-    activityText: {
-        fontSize: 15,
+    statValue: {
+        fontSize: 32,
+        fontWeight: '800',
+        marginBottom: 4,
+    },
+    statLabel: {
+        fontSize: 13,
         fontWeight: '500',
-        marginBottom: 2,
     },
-    activityTime: {
-        fontSize: 12,
-    },
-    floatingChatButton: {
+    statIcon: {
         position: 'absolute',
-        bottom: 24,
+        top: 20,
         right: 20,
-        shadowColor: '#001F3F',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.4,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-    floatingChatGradient: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        alignItems: 'center',
-        justifyContent: 'center',
+        opacity: 0.8,
     },
 });
