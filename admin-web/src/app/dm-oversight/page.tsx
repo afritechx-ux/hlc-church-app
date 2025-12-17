@@ -87,9 +87,10 @@ export default function DMOversightPage() {
         try {
             const { data } = await api.get(`/direct-messages/admin/conversation/${conv.id}`);
             setSelectedConversation(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to load conversation:', error);
-            toast.error('Failed to load conversation');
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to load conversation';
+            toast.error(`Error: ${errorMessage}`);
         }
     };
 
@@ -310,10 +311,10 @@ export default function DMOversightPage() {
                                             >
                                                 <div
                                                     className={`max-w-[70%] p-3 rounded-2xl ${isAdmin
-                                                            ? 'bg-amber-500 text-white'
-                                                            : isP1
-                                                                ? 'bg-green-500 text-white rounded-bl-sm'
-                                                                : 'bg-purple-500 text-white rounded-br-sm'
+                                                        ? 'bg-amber-500 text-white'
+                                                        : isP1
+                                                            ? 'bg-green-500 text-white rounded-bl-sm'
+                                                            : 'bg-purple-500 text-white rounded-br-sm'
                                                         }`}
                                                 >
                                                     <p className="text-xs font-medium mb-1 opacity-80">
