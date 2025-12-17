@@ -18,25 +18,61 @@ export class AuthService {
     async signupLocal(dto: AuthDto): Promise<Tokens> {
         const hash = await argon.hash(dto.password);
 
-        const user = await this.prisma.user
-            .create({
-                data: {
-                    email: dto.email,
-                    password: hash,
-                },
-            })
-            .catch((error) => {
-                if (error instanceof PrismaClientKnownRequestError) {
-                    if (error.code === 'P2002') {
-                        throw new ForbiddenException('Credentials taken');
+        try {
+            const user = await this.prisma.$transaction(async (prisma) => {
+                // 1. Create User
+                const newUser = await prisma.user.create({
+                    data: {
+                        email: dto.email,
+                        password: hash,
+                    },
+                });
+
+                // 2. Determine Names
+                let firstName = dto.firstName;
+                let lastName = dto.lastName;
+
+                if (!firstName || !lastName) {
+                    // Fallback to email parsing for legacy apps
+                    const namePart = dto.email.split('@')[0];
+                    if (namePart.includes('.')) {
+                        firstName = namePart.split('.')[0];
+                        lastName = namePart.split('.')[1];
+                    } else {
+                        firstName = namePart;
+                        lastName = 'User';
                     }
+                    // Capitalize
+                    firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+                    lastName = lastName.charAt(0).toUpperCase() + lastName.slice(1);
                 }
-                throw error;
+
+                // 3. Create Member linked to User
+                await prisma.member.create({
+                    data: {
+                        userId: newUser.id,
+                        firstName: firstName || 'New',
+                        lastName: lastName || 'Member',
+                        email: dto.email,
+                        phone: dto.phone,
+                    },
+                });
+
+                return newUser;
             });
 
-        const tokens = await this.getTokens(user.id, user.email, user.role);
-        await this.updateRtHash(user.id, tokens.refresh_token);
-        return tokens;
+            const tokens = await this.getTokens(user.id, user.email, user.role);
+            await this.updateRtHash(user.id, tokens.refresh_token);
+            return tokens;
+
+        } catch (error) {
+            if (error instanceof PrismaClientKnownRequestError) {
+                if (error.code === 'P2002') {
+                    throw new ForbiddenException('Credentials taken');
+                }
+            }
+            throw error;
+        }
     }
 
     async signinLocal(dto: AuthDto): Promise<Tokens> {
