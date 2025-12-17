@@ -74,6 +74,9 @@ export default function RegisterScreen({ navigation }: any) {
             await client.post('/auth/local/signup', {
                 email: form.email.trim().toLowerCase(),
                 password: form.password,
+                firstName: form.firstName.trim(),
+                lastName: form.lastName.trim(),
+                phone: form.phone.trim(),
             });
 
             Alert.alert(
