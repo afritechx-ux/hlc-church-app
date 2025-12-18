@@ -5,6 +5,9 @@ export enum PaymentMethod {
     CARD = 'CARD',
     MOBILE_MONEY = 'MOBILE_MONEY',
     ONLINE = 'ONLINE',
+    BANK_TRANSFER = 'BANK_TRANSFER',
+    USSD = 'USSD',
+    OTHER = 'OTHER',
 }
 
 export class CreateDonationDto {

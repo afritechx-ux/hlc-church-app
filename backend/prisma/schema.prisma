@@ -22,12 +22,7 @@ enum AttendanceMethod {
   MANUAL
 }
 
-enum PaymentMethod {
-  CASH
-  CARD
-  MOBILE_MONEY
-  ONLINE
-}
+
 
 enum FollowUpType {
   NEW_VISITOR
@@ -169,15 +164,39 @@ model QRTokenUsage {
   createdAt DateTime @default(now())
 }
 
+enum PaymentMethod {
+  CASH
+  CARD
+  MOBILE_MONEY
+  BANK_TRANSFER
+  USSD
+  OTHER
+}
+
 model GivingFund {
   id          String     @id @default(uuid())
   name        String
   description String?
+  goal        Decimal?   @db.Decimal(10, 2)
   
   donations   Donation[]
   
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+}
+
+model PaymentConfig {
+  id            String        @id @default(uuid())
+  type          PaymentMethod
+  provider      String        // e.g., "MTN MoMo", "Telecel Cash", "Ecobank", "G-Money"
+  accountName   String
+  accountNumber String
+  description   String?       // For instructions like "Use strict reference"
+  
+  isActive      Boolean       @default(true)
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model Donation {

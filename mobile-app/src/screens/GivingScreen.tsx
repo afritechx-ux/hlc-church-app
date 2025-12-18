@@ -45,12 +45,23 @@ const PAYMENT_METHODS = [
     { value: 'ONLINE', label: 'Online', icon: '🌐' },
 ];
 
+interface PaymentConfig {
+    id: string;
+    type: string;
+    provider: string;
+    accountName: string;
+    accountNumber: string;
+    description?: string;
+    isActive: boolean;
+}
+
 export default function GivingScreen() {
     const { theme } = useTheme();
     const colors = theme.colors;
 
     const [donations, setDonations] = useState<Donation[]>([]);
     const [funds, setFunds] = useState<Fund[]>([]);
+    const [paymentConfigs, setPaymentConfigs] = useState<PaymentConfig[]>([]);
     const [loading, setLoading] = useState(true);
     const [totalGiving, setTotalGiving] = useState(0);
     const [memberId, setMemberId] = useState<string | null>(null);
@@ -62,7 +73,7 @@ export default function GivingScreen() {
     const [showDonationModal, setShowDonationModal] = useState(false);
     const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
     const [amount, setAmount] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState('MOBILE_MONEY');
+    const [paymentMethod, setPaymentMethod] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -76,10 +87,17 @@ export default function GivingScreen() {
 
     const fetchData = async () => {
         try {
-            // Always fetch funds first
+            // Always fetch funds and payment configs first
             const fundsRes = await client.get('/giving/funds');
+            const configsRes = await client.get('/giving/payment-configs');
             console.log('Funds loaded:', fundsRes.data);
             setFunds(fundsRes.data || []);
+            setPaymentConfigs(configsRes.data || []);
+
+            // Set default payment method if available
+            if (configsRes.data && configsRes.data.length > 0) {
+                setPaymentMethod(configsRes.data[0].id);
+            }
 
             // Then get user data
             try {
@@ -117,20 +135,26 @@ export default function GivingScreen() {
             return;
         }
 
+        const selectedConfig = paymentConfigs.find(c => c.id === paymentMethod);
+        const methodToSend = selectedConfig ? selectedConfig.type : 'OTHER';
+
         setSubmitting(true);
         try {
             await client.post('/giving/donations', {
                 amount: parseFloat(amount),
                 fundId: selectedFund.id,
                 memberId: memberId,
-                method: paymentMethod,
+                method: methodToSend,
             });
 
             Alert.alert('🎉 Thank You!', 'Your donation has been received. God bless you!');
             setShowDonationModal(false);
             setAmount('');
             setSelectedFund(null);
-            setPaymentMethod('MOBILE_MONEY');
+            // Reset to first available if any
+            if (paymentConfigs.length > 0) {
+                setPaymentMethod(paymentConfigs[0].id);
+            }
             fetchData();
         } catch (error) {
             console.error('Failed to submit donation', error);
@@ -152,7 +176,7 @@ export default function GivingScreen() {
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Header with gradient */}
             <LinearGradient
-                colors={['#10b981', '#059669', '#047857']}
+                colors={theme.gradients.primary}
                 style={styles.header}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -366,39 +390,75 @@ export default function GivingScreen() {
                             </View>
 
                             {/* Payment Method */}
-                            <Text style={[styles.inputLabel, { color: colors.text }]}>Payment Method</Text>
-                            <View style={styles.methodGrid}>
-                                {PAYMENT_METHODS.map((method) => (
-                                    <TouchableOpacity
-                                        key={method.value}
-                                        style={[
-                                            styles.methodCard,
-                                            {
-                                                backgroundColor: paymentMethod === method.value
-                                                    ? colors.primary + '15'
-                                                    : colors.inputBackground,
-                                                borderColor: paymentMethod === method.value
-                                                    ? colors.primary
-                                                    : colors.border,
-                                            },
-                                        ]}
-                                        onPress={() => setPaymentMethod(method.value)}
-                                    >
-                                        <Text style={styles.methodIcon}>{method.icon}</Text>
-                                        <Text
+                            <Text style={[styles.inputLabel, { color: colors.text }]}>Payment Channel</Text>
+                            {paymentConfigs.length === 0 ? (
+                                <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium' }}>
+                                    No payment channels configured.
+                                </Text>
+                            ) : (
+                                <View style={styles.methodGrid}>
+                                    {paymentConfigs.map((config) => (
+                                        <TouchableOpacity
+                                            key={config.id}
                                             style={[
-                                                styles.methodLabel,
-                                                { color: paymentMethod === method.value ? colors.primary : colors.text },
+                                                styles.methodCard,
+                                                {
+                                                    backgroundColor: paymentMethod === config.id
+                                                        ? colors.primary + '15'
+                                                        : colors.inputBackground,
+                                                    borderColor: paymentMethod === config.id
+                                                        ? colors.primary
+                                                        : colors.border,
+                                                    flexDirection: 'column',
+                                                    alignItems: 'flex-start',
+                                                },
                                             ]}
+                                            onPress={() => setPaymentMethod(config.id)}
                                         >
-                                            {method.label}
-                                        </Text>
-                                        {paymentMethod === method.value && (
-                                            <Check size={16} color={colors.primary} style={styles.methodCheck} />
-                                        )}
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', width: '100%', marginBottom: paymentMethod === config.id ? 8 : 0 }}>
+                                                <Text style={styles.methodIcon}>
+                                                    {config.type === 'MOBILE_MONEY' ? '📱' :
+                                                        config.type === 'BANK_TRANSFER' ? '🏦' :
+                                                            config.type === 'USSD' ? '🔢' : '💳'}
+                                                </Text>
+                                                <View style={{ flex: 1 }}>
+                                                    <Text
+                                                        style={[
+                                                            styles.methodLabel,
+                                                            { color: paymentMethod === config.id ? colors.primary : colors.text },
+                                                        ]}
+                                                    >
+                                                        {config.provider}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 12, color: colors.textMuted, fontFamily: 'PlusJakartaSans-Regular' }}>
+                                                        {config.type.replace('_', ' ')}
+                                                    </Text>
+                                                </View>
+                                                {paymentMethod === config.id && (
+                                                    <Check size={16} color={colors.primary} style={styles.methodCheck} />
+                                                )}
+                                            </View>
+
+                                            {paymentMethod === config.id && (
+                                                <View style={{ width: '100%', padding: 12, backgroundColor: colors.background, borderRadius: 8, marginTop: 4 }}>
+                                                    <Text style={{ fontSize: 12, color: colors.textMuted, marginBottom: 4 }}>ACCOUNT DETAILS</Text>
+                                                    <Text style={{ fontSize: 16, fontFamily: 'PlusJakartaSans-Bold', color: colors.text }}>
+                                                        {config.accountNumber}
+                                                    </Text>
+                                                    <Text style={{ fontSize: 14, fontFamily: 'PlusJakartaSans-Medium', color: colors.textSecondary }}>
+                                                        {config.accountName}
+                                                    </Text>
+                                                    {config.description && (
+                                                        <Text style={{ fontSize: 12, color: colors.primary, marginTop: 8, fontFamily: 'PlusJakartaSans-Medium' }}>
+                                                            Instruction: {config.description}
+                                                        </Text>
+                                                    )}
+                                                </View>
+                                            )}
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
                         </ScrollView>
 
                         {/* Submit Button */}
@@ -454,7 +514,7 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 28,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         color: '#fff',
         marginBottom: 20,
     },
@@ -487,10 +547,11 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#64748b',
         marginBottom: 2,
+        fontFamily: 'PlusJakartaSans-Medium',
     },
     totalAmount: {
         fontSize: 28,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-ExtraBold',
         color: '#0f172a',
     },
     headerDecor1: {
@@ -542,7 +603,7 @@ const styles = StyleSheet.create({
     giveButtonText: {
         color: '#fff',
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         flex: 1,
     },
     content: {
@@ -551,7 +612,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 20,
-        fontWeight: '700',
+        fontFamily: 'PlusJakartaSans-Bold',
         marginBottom: 16,
     },
     donationItem: {
@@ -579,7 +640,7 @@ const styles = StyleSheet.create({
     },
     fundName: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
         marginBottom: 6,
     },
     metaRow: {
@@ -590,6 +651,7 @@ const styles = StyleSheet.create({
         fontSize: 12,
         marginLeft: 4,
         marginRight: 10,
+        fontFamily: 'PlusJakartaSans-Medium',
     },
     methodBadge: {
         paddingHorizontal: 8,
@@ -598,14 +660,14 @@ const styles = StyleSheet.create({
     },
     methodText: {
         fontSize: 10,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     amountContainer: {
         alignItems: 'flex-end',
     },
     amount: {
         fontSize: 17,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
     },
     emptyState: {
         alignItems: 'center',
@@ -622,13 +684,14 @@ const styles = StyleSheet.create({
     },
     emptyTitle: {
         fontSize: 20,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         marginBottom: 8,
     },
     emptyText: {
         fontSize: 14,
         textAlign: 'center',
         lineHeight: 22,
+        fontFamily: 'PlusJakartaSans-Regular',
     },
     // Modal Styles
     modalOverlay: {
@@ -658,7 +721,7 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
     },
     closeButton: {
         width: 40,
@@ -669,7 +732,7 @@ const styles = StyleSheet.create({
     },
     inputLabel: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
         marginBottom: 10,
         marginTop: 16,
     },
@@ -688,7 +751,7 @@ const styles = StyleSheet.create({
     },
     fundCardText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-Medium',
         marginLeft: 8,
     },
     amountInputContainer: {
@@ -700,13 +763,13 @@ const styles = StyleSheet.create({
     },
     currencyPrefix: {
         fontSize: 18,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
         marginRight: 8,
     },
     amountInput: {
         flex: 1,
         fontSize: 32,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         paddingVertical: 16,
     },
     quickAmounts: {
@@ -723,7 +786,7 @@ const styles = StyleSheet.create({
     },
     quickAmountText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     methodGrid: {
         gap: 10,
@@ -741,7 +804,7 @@ const styles = StyleSheet.create({
     },
     methodLabel: {
         fontSize: 15,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-Medium',
         flex: 1,
     },
     methodCheck: {
@@ -758,7 +821,7 @@ const styles = StyleSheet.create({
     submitButtonText: {
         color: '#fff',
         fontSize: 18,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         marginLeft: 10,
     },
     noFundsMessage: {
@@ -769,5 +832,6 @@ const styles = StyleSheet.create({
     noFundsText: {
         fontSize: 14,
         textAlign: 'center',
+        fontFamily: 'PlusJakartaSans-Medium',
     },
 });

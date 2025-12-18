@@ -132,34 +132,37 @@ export const shadows = {
 export const createTypography = (colors: ThemeColors) => ({
     h1: {
         fontSize: 34,
-        fontWeight: '800' as const,
+        fontFamily: 'PlusJakartaSans-ExtraBold',
         color: colors.text,
         letterSpacing: -1,
     },
     h2: {
         fontSize: 28,
-        fontWeight: '700' as const,
+        fontFamily: 'PlusJakartaSans-Bold',
         color: colors.text,
         letterSpacing: -0.5,
     },
     h3: {
         fontSize: 22,
-        fontWeight: '700' as const,
+        fontFamily: 'PlusJakartaSans-Bold',
         color: colors.text,
         letterSpacing: -0.5,
     },
     body: {
         fontSize: 16,
+        fontFamily: 'PlusJakartaSans-Regular',
         color: colors.text,
         lineHeight: 24,
     },
     bodySmall: {
         fontSize: 14,
+        fontFamily: 'PlusJakartaSans-Medium',
         color: colors.textSecondary,
         lineHeight: 20,
     },
     caption: {
         fontSize: 12,
+        fontFamily: 'PlusJakartaSans-SemiBold',
         color: colors.textMuted,
         lineHeight: 16,
         textTransform: 'uppercase' as const,
@@ -167,19 +170,19 @@ export const createTypography = (colors: ThemeColors) => ({
     },
     button: {
         fontSize: 16,
-        fontWeight: '700' as const,
+        fontFamily: 'PlusJakartaSans-Bold',
         letterSpacing: 0.5,
     },
 });
 
 // Brand gradients based on logo
 export const brandGradients = {
-    primary: ['#0F2027', '#203A43', '#2C5364'], // "Deep Space"
-    secondary: ['#FFD700', '#FDB931'], // "Macbeth Gold"
-    accent: ['#0F2027', '#FFD700'], // Navy to Gold
-    header: ['#0F2027', '#203A43'],
-    button: ['#0F2027', '#203A43'],
-    gold: ['#FDB931', '#FFD700', '#FDB931'], // Metallic Gold
+    primary: ['#0F2027', '#203A43', '#2C5364'] as const, // "Deep Space"
+    secondary: ['#FFD700', '#FDB931'] as const, // "Macbeth Gold"
+    accent: ['#0F2027', '#FFD700'] as const, // Navy to Gold
+    header: ['#0F2027', '#203A43'] as const,
+    button: ['#0F2027', '#203A43'] as const,
+    gold: ['#FDB931', '#FFD700', '#FDB931'] as const, // Metallic Gold
 };
 
 // For backwards compatibility

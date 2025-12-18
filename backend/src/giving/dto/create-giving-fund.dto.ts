@@ -8,4 +8,8 @@ export class CreateGivingFundDto {
     @IsOptional()
     @IsString()
     description?: string;
+
+    @IsOptional()
+    //@IsNumber() // Can be validated as string or number depending on transform
+    goal?: number;
 }

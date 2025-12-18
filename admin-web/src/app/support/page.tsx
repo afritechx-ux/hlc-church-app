@@ -23,6 +23,7 @@ import {
     FileText,
     Image as ImageIcon,
     Download,
+    Bot,
 } from 'lucide-react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:3333';
@@ -374,10 +375,19 @@ export default function SupportPage() {
                                                     }`}
                                                 style={!message.isAdmin ? { background: 'var(--card-bg)' } : undefined}
                                             >
-                                                {!message.isAdmin && (
+                                                {!message.isAdmin ? (
                                                     <p className="text-xs font-medium mb-1" style={{ color: 'var(--foreground-muted)' }}>
                                                         {message.senderName}
                                                     </p>
+                                                ) : (
+                                                    <div className="flex items-center gap-1.5 mb-1">
+                                                        <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center">
+                                                            <Bot className="w-3 h-3 text-white" />
+                                                        </div>
+                                                        <p className="text-xs font-medium text-white/90">
+                                                            {message.senderName}
+                                                        </p>
+                                                    </div>
                                                 )}
                                                 {/* Attachment Display */}
                                                 {message.attachmentType === 'image' && message.attachmentUrl && (

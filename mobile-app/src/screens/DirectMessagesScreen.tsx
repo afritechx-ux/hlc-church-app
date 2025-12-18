@@ -182,9 +182,10 @@ export default function DirectMessagesScreen({ navigation }: any) {
                 conversationId: data.id,
                 otherParticipant: data.otherParticipant,
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to start conversation:', error);
-            Alert.alert('Error', 'Failed to start conversation');
+            const errorMessage = error.response?.data?.message || 'Failed to start conversation';
+            Alert.alert('Error', errorMessage);
         }
     };
 

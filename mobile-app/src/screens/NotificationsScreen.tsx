@@ -65,7 +65,7 @@ export default function NotificationsScreen({ navigation }: any) {
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
             {/* Header */}
             <LinearGradient
-                colors={[colors.error, '#dc2626']}
+                colors={theme.gradients.primary}
                 style={styles.header}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     },
     headerTitle: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontFamily: 'PlusJakartaSans-Bold',
         color: '#fff',
         marginTop: 12,
         marginBottom: 4,
@@ -187,6 +187,7 @@ const styles = StyleSheet.create({
     headerSubtitle: {
         fontSize: 14,
         color: 'rgba(255,255,255,0.8)',
+        fontFamily: 'PlusJakartaSans-Regular',
     },
     headerDecor1: {
         position: 'absolute',
@@ -208,7 +209,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 16,
-        fontWeight: '700',
+        fontFamily: 'PlusJakartaSans-Bold',
         marginBottom: 16,
     },
     settingRow: {
@@ -230,10 +231,11 @@ const styles = StyleSheet.create({
     },
     settingTitle: {
         fontSize: 15,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     settingSubtitle: {
         fontSize: 12,
         marginTop: 2,
+        fontFamily: 'PlusJakartaSans-Regular',
     },
 });

@@ -274,12 +274,12 @@ const styles = StyleSheet.create({
     },
     greeting: {
         fontSize: 14,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-Medium',
         marginBottom: 4,
     },
     userName: {
         fontSize: 24,
-        fontWeight: '800',
+        fontFamily: 'PlusJakartaSans-ExtraBold',
         letterSpacing: -0.5,
     },
     headerRight: {
@@ -354,13 +354,13 @@ const styles = StyleSheet.create({
     liveText: {
         color: '#FFD700',
         fontSize: 10,
-        fontWeight: '700',
+        fontFamily: 'PlusJakartaSans-Bold',
         letterSpacing: 1,
     },
     serviceTitle: {
         color: '#fff',
         fontSize: 26,
-        fontWeight: '700',
+        fontFamily: 'PlusJakartaSans-Bold',
         letterSpacing: -0.5,
         marginTop: 10,
         marginBottom: 10,
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
         color: 'rgba(255,255,255,0.9)',
         fontSize: 14,
         marginLeft: 6,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-Medium',
     },
     dividerDot: {
         width: 4,
@@ -392,7 +392,7 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: '700',
+        fontFamily: 'PlusJakartaSans-Bold',
         marginBottom: 16,
     },
     grid: {
@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     },
     actionLabel: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     statsRow: {
         flexDirection: 'row',
@@ -434,12 +434,12 @@ const styles = StyleSheet.create({
     },
     statValue: {
         fontSize: 32,
-        fontWeight: '800',
+        fontFamily: 'PlusJakartaSans-ExtraBold',
         marginBottom: 4,
     },
     statLabel: {
         fontSize: 13,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-Medium',
     },
     statIcon: {
         position: 'absolute',

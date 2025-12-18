@@ -50,7 +50,7 @@ export class DirectMessagesService {
                     ...conv,
                     otherParticipant: {
                         id: otherParticipantId,
-                        email: otherUser?.email,
+                        email: otherUser?.email || '', // Ensure string
                         name: otherUser?.member
                             ? `${otherUser.member.firstName} ${otherUser.member.lastName}`
                             : otherUser?.email?.split('@')[0] || 'Unknown',
@@ -111,7 +111,7 @@ export class DirectMessagesService {
             ...conversation,
             otherParticipant: {
                 id: participantId,
-                email: otherUser?.email,
+                email: otherUser?.email || '', // Ensure string
                 name: otherUser?.member
                     ? `${otherUser.member.firstName} ${otherUser.member.lastName}`
                     : otherUser?.email?.split('@')[0] || 'Unknown',
@@ -153,7 +153,7 @@ export class DirectMessagesService {
             ...conversation,
             otherParticipant: {
                 id: otherParticipantId,
-                email: otherUser?.email,
+                email: otherUser?.email || '', // Ensure string
                 name: otherUser?.member
                     ? `${otherUser.member.firstName} ${otherUser.member.lastName}`
                     : otherUser?.email?.split('@')[0] || 'Unknown',
@@ -299,12 +299,12 @@ export class DirectMessagesService {
                     participant1: {
                         id: conv.participant1Id,
                         name: participant1Name,
-                        email: user1?.email,
+                        email: user1?.email || '', // Ensure string
                     },
                     participant2: {
                         id: conv.participant2Id,
                         name: participant2Name,
-                        email: user2?.email,
+                        email: user2?.email || '', // Ensure string
                     },
                     lastMessage: conv.messages[0] || null,
                     messageCount: await this.prisma.directMessage.count({

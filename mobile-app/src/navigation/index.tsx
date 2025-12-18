@@ -2,6 +2,7 @@ import React from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Added import
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import LoginScreen from '../screens/LoginScreen';
@@ -28,6 +29,7 @@ const Tab = createBottomTabNavigator();
 function AppTabs() {
     const { theme } = useTheme();
     const colors = theme.colors;
+    const insets = useSafeAreaInsets(); // Get safe area insets
 
     return (
         <Tab.Navigator
@@ -38,9 +40,9 @@ function AppTabs() {
                 tabBarStyle: {
                     backgroundColor: '#0F2027', // Deep Navy background
                     borderTopWidth: 0,
-                    height: Platform.OS === 'ios' ? 90 : 70, // Taller for modern look
-                    paddingTop: 12,
-                    paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+                    height: 60 + insets.bottom, // Dynamic height based on content + safe area
+                    paddingTop: 10,
+                    paddingBottom: insets.bottom > 0 ? insets.bottom : 10, // Dynamic padding
                     elevation: 10,
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: -4 },
