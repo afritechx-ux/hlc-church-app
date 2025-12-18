@@ -20,6 +20,7 @@ export class GivingController {
     // Funds
     @Post('funds')
     createFund(@Body() createGivingFundDto: CreateGivingFundDto) {
+        console.log('Backend received createFund request:', createGivingFundDto);
         return this.givingService.createFund(createGivingFundDto);
     }
 

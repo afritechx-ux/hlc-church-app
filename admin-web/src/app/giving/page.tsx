@@ -94,8 +94,8 @@ export default function GivingPage() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as ActiveTab)}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${activeTab === tab.id
-                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'
-                                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-700'
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 dark:shadow-none'
+                                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-slate-700'
                                     }`}
                             >
                                 <tab.icon className="w-4 h-4" />
@@ -595,15 +595,23 @@ export default function GivingPage() {
         }
             setLoading(true);
             try {
-                await api.post('/giving/funds', {
-                    name: form.name,
-                    description: form.description || null,
-                    goal: form.goal ? parseFloat(form.goal) : null,
-                });
+            const payload: any = {name: form.name };
+            if (form.description && form.description.trim()) {
+                payload.description = form.description.trim();
+            }
+            if (form.goal) {
+                payload.goal = parseFloat(form.goal);
+            }
+
+            console.log('Creating fund with payload:', payload); // Debug log
+
+            await api.post('/giving/funds', payload);
             toast.success('Fund created successfully');
             onSuccess();
         } catch (error: any) {
-                toast.error(error.response?.data?.message || 'Failed to create fund');
+                console.error('Fund creation failed:', error);
+            const msg = error.response?.data?.message;
+            toast.error(Array.isArray(msg) ? msg.join(', ') : (msg || 'Failed to create fund'));
         } finally {
                 setLoading(false);
         }
