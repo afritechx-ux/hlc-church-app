@@ -4,32 +4,29 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-    console.log('--- STARTING REMOTE SCHEMA INSPECTION ---');
+    console.log('--- STARTING PRISMA CLIENT ACCESS TEST (APP LAYER) ---');
 
     try {
-        // 1. List all tables
-        console.log('1. Listing all tables in public schema...');
-        const tables = await prisma.$queryRaw`
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public' 
-        ORDER BY table_name;
-    `;
-        console.log('   Tables found:', tables);
-
-        // 2. Check PaymentConfig specifically
+        // 1. Test Giving Funds
+        console.log('1. Testing prisma.givingFund.findMany()...');
         try {
-            const count1 = await prisma.$queryRaw`SELECT count(*) FROM "PaymentConfig"`;
-            console.log('   "PaymentConfig" table exists. Rows:', count1);
+            const funds = await prisma.givingFund.findMany();
+            console.log(`   Success! Found ${funds.length} funds.`);
+            console.log('   Funds:', JSON.stringify(funds, null, 2));
         } catch (e) {
-            console.log('   "PaymentConfig" table DOES NOT exist.');
+            console.error('   FAILED: prisma.givingFund.findMany()');
+            console.error('   Error:', e.message);
         }
 
+        // 2. Test Payment Configs
+        console.log('2. Testing prisma.paymentConfig.findMany()...');
         try {
-            const count2 = await prisma.$queryRaw`SELECT count(*) FROM "payment_configurations"`;
-            console.log('   "payment_configurations" table exists. Rows:', count2);
+            const configs = await prisma.paymentConfig.findMany();
+            console.log(`   Success! Found ${configs.length} configs.`);
+            console.log('   Configs:', JSON.stringify(configs, null, 2));
         } catch (e) {
-            console.log('   "payment_configurations" table DOES NOT exist.');
+            console.error('   FAILED: prisma.paymentConfig.findMany()');
+            console.error('   Error:', e.message);
         }
 
     } catch (error) {

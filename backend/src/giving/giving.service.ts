@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateDonationDto } from './dto/create-donation.dto';
 import { CreateGivingFundDto } from './dto/create-giving-fund.dto';
 import { UpdateGivingFundDto } from './dto/update-giving-fund.dto';
+import { CreatePaymentConfigDto } from './dto/create-payment-config.dto';
 
 @Injectable()
 export class GivingService {
@@ -46,7 +47,7 @@ export class GivingService {
                 amount: createDonationDto.amount,
                 fundId: createDonationDto.fundId,
                 memberId: createDonationDto.memberId,
-                method: createDonationDto.method || PaymentMethod.CASH,
+                method: (createDonationDto.method as any) || PaymentMethod.CASH,
             },
         });
     }
@@ -72,6 +73,34 @@ export class GivingService {
             orderBy: {
                 date: 'desc',
             },
+        });
+    }
+
+    // Payment Configs
+    createPaymentConfig(dto: CreatePaymentConfigDto) {
+        return this.prisma.paymentConfig.create({
+            data: dto,
+        });
+    }
+
+    findAllPaymentConfigs() {
+        return this.prisma.paymentConfig.findMany({
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+    }
+
+    removePaymentConfig(id: string) {
+        return this.prisma.paymentConfig.delete({
+            where: { id },
+        });
+    }
+
+    togglePaymentConfig(id: string, isActive: boolean) {
+        return this.prisma.paymentConfig.update({
+            where: { id },
+            data: { isActive },
         });
     }
 }

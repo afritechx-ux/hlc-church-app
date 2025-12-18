@@ -246,6 +246,22 @@ export default function HomeScreen({ navigation }: any) {
                     {/* Bottom Spacer for Tab Bar */}
                     <View style={{ height: 100 }} />
                 </ScrollView>
+
+                {/* Floating Chat Button */}
+                <TouchableOpacity
+                    style={styles.floatingChatButton}
+                    onPress={() => navigation.navigate('Chat')}
+                    activeOpacity={0.9}
+                >
+                    <LinearGradient
+                        colors={['#4f46e5', '#3730a3']}
+                        style={styles.floatingChatGradient}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                    >
+                        <MessageCircle size={28} color="#fff" />
+                    </LinearGradient>
+                </TouchableOpacity>
             </SafeAreaView>
         </View>
     );
@@ -446,5 +462,25 @@ const styles = StyleSheet.create({
         top: 20,
         right: 20,
         opacity: 0.8,
+    },
+    floatingChatButton: {
+        position: 'absolute',
+        bottom: 30, // Adjust based on tab bar height if needed
+        right: 24,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        shadowColor: '#4f46e5',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 10,
+        elevation: 8,
+        zIndex: 100,
+    },
+    floatingChatGradient: {
+        flex: 1,
+        borderRadius: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
