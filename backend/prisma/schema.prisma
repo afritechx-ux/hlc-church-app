@@ -177,7 +177,6 @@ model GivingFund {
   id          String     @id @default(uuid())
   name        String
   description String?
-  goal        Decimal?   @db.Decimal(10, 2)
   
   donations   Donation[]
   

@@ -27,7 +27,6 @@ interface Fund {
     id: string;
     name: string;
     description?: string;
-    goal?: number;
     _count?: { donations: number };
 }
 
@@ -161,9 +160,6 @@ export default function GivingPage() {
                                     <div key={fund.id} className="glass-card p-6">
                                         <h3 className="font-bold text-lg mb-2">{fund.name}</h3>
                                         <p className="text-sm text-gray-500">{fund.description}</p>
-                                        <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between">
-                                            <span className="text-xs font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded">Target: GHS {fund.goal || 'N/A'}</span>
-                                        </div>
                                     </div>
                                 ))}
                             </motion.div>
@@ -584,7 +580,6 @@ export default function GivingPage() {
             const [form, setForm] = useState({
                 name: '',
             description: '',
-            goal: '',
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -599,11 +594,8 @@ export default function GivingPage() {
             if (form.description && form.description.trim()) {
                 payload.description = form.description.trim();
             }
-            if (form.goal) {
-                payload.goal = parseFloat(form.goal);
-            }
 
-            console.log('Creating fund with payload:', payload); // Debug log
+            console.log('Creating fund with payload:', payload);
 
             await api.post('/giving/funds', payload);
             toast.success('Fund created successfully');
@@ -666,21 +658,6 @@ export default function GivingPage() {
                                 value={form.description}
                                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                                 placeholder="Describe the purpose of this fund..."
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
-                                Goal Amount (GHS)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                className="input-modern w-full"
-                                value={form.goal}
-                                onChange={(e) => setForm({ ...form, goal: e.target.value })}
-                                placeholder="Leave empty for no goal"
                             />
                         </div>
 

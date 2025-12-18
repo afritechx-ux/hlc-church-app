@@ -9,9 +9,4 @@ export class CreateGivingFundDto {
     @IsOptional()
     @IsString()
     description?: string;
-
-    @IsOptional()
-    @IsNumber()
-    @Type(() => Number)
-    goal?: number;
 }
