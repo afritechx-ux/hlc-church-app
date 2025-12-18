@@ -548,14 +548,14 @@ const styles = StyleSheet.create({
     },
     welcomeText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-Bold',
         letterSpacing: 2,
         textTransform: 'uppercase',
         marginBottom: 4,
     },
     title: {
         fontSize: 28,
-        fontWeight: '800',
+        fontFamily: 'PlusJakartaSans-ExtraBold',
         letterSpacing: -0.5,
         marginBottom: 8,
     },
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
     },
     subtitle: {
         fontSize: 14,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-Medium',
     },
 
     // Form Card
@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     },
     formTitle: {
         fontSize: 22,
-        fontWeight: '700',
+        fontFamily: 'PlusJakartaSans-Bold',
         marginBottom: 24,
         textAlign: 'center',
         letterSpacing: -0.3,
@@ -591,7 +591,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         borderRadius: 16,
-        borderWidth: 2,
+        borderWidth: 1,
         paddingHorizontal: 6,
         height: 60,
         marginBottom: 16,
@@ -607,7 +607,7 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 16,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-Medium',
     },
     eyeButton: {
         padding: 10,
@@ -618,7 +618,7 @@ const styles = StyleSheet.create({
     },
     forgotPasswordText: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     errorContainer: {
         padding: 14,
@@ -628,7 +628,7 @@ const styles = StyleSheet.create({
     errorText: {
         fontSize: 14,
         textAlign: 'center',
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-Medium',
     },
     loginButtonWrapper: {
         marginBottom: 20,
@@ -648,7 +648,7 @@ const styles = StyleSheet.create({
     loginButtonText: {
         color: '#fff',
         fontSize: 17,
-        fontWeight: '700',
+        fontFamily: 'PlusJakartaSans-Bold',
         letterSpacing: 0.5,
     },
     buttonArrow: {
@@ -672,7 +672,7 @@ const styles = StyleSheet.create({
     dividerText: {
         marginHorizontal: 16,
         fontSize: 13,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-Medium',
     },
     registerButton: {
         height: 54,
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     },
     registerButtonText: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-Bold',
     },
 
     // Footer
@@ -693,10 +693,11 @@ const styles = StyleSheet.create({
     },
     footerText: {
         fontSize: 13,
-        fontWeight: '500',
+        fontFamily: 'PlusJakartaSans-Medium',
     },
     footerVersion: {
         fontSize: 11,
         marginTop: 4,
+        fontFamily: 'PlusJakartaSans-Regular',
     },
 });

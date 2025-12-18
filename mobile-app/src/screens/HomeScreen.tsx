@@ -100,7 +100,11 @@ export default function HomeScreen({ navigation }: any) {
     };
 
     const QuickActionItem = ({ icon: Icon, label, onPress, color }: any) => (
-        <TouchableOpacity style={styles.actionItem} onPress={onPress}>
+        <TouchableOpacity
+            style={[styles.actionItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={onPress}
+            activeOpacity={0.7}
+        >
             <View style={[styles.actionIconContainer, { backgroundColor: color + '15' }]}>
                 <Icon size={24} color={color} />
             </View>
@@ -157,6 +161,8 @@ export default function HomeScreen({ navigation }: any) {
                                 end={{ x: 1, y: 1 }}
                                 style={styles.heroCard}
                             >
+                                <View style={styles.heroCardPattern} />
+
                                 <View style={styles.heroHeader}>
                                     <View style={styles.liveTag}>
                                         <View style={styles.liveDot} />
@@ -171,7 +177,7 @@ export default function HomeScreen({ navigation }: any) {
 
                                 <View style={styles.serviceInfoRow}>
                                     <View style={styles.serviceInfoItem}>
-                                        <Clock size={16} color={colors.secondary} />
+                                        <Clock size={14} color="#fff" />
                                         <Text style={styles.serviceInfoText}>
                                             {nextService
                                                 ? new Date(nextService.date).toLocaleDateString('en-US', {
@@ -185,7 +191,7 @@ export default function HomeScreen({ navigation }: any) {
                                     </View>
                                     <View style={styles.dividerDot} />
                                     <View style={styles.serviceInfoItem}>
-                                        <MapPin size={16} color={colors.secondary} />
+                                        <MapPin size={14} color="#fff" />
                                         <Text style={styles.serviceInfoText}>Main Auditorium</Text>
                                     </View>
                                 </View>
@@ -198,7 +204,7 @@ export default function HomeScreen({ navigation }: any) {
                     {/* Quick Access Grid */}
                     <View style={styles.section}>
                         <Text style={[styles.sectionTitle, { color: colors.text }]}>Quick Actions</Text>
-                        <View style={[styles.grid, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                        <View style={styles.grid}>
                             <QuickActionItem
                                 icon={QrCode}
                                 label="Check-In"
@@ -233,12 +239,12 @@ export default function HomeScreen({ navigation }: any) {
                             <View style={[styles.statBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                                 <Text style={[styles.statValue, { color: colors.primary }]}>3</Text>
                                 <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Wk Streak</Text>
-                                <Flame size={16} color={colors.warning} style={styles.statIcon} />
+                                <Flame size={50} color={colors.warning} style={[styles.statIcon, { bottom: -10, right: -10 }]} />
                             </View>
                             <View style={[styles.statBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                                 <Text style={[styles.statValue, { color: colors.primary }]}>12</Text>
                                 <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Attended</Text>
-                                <TrendingUp size={16} color={colors.success} style={styles.statIcon} />
+                                <TrendingUp size={50} color={colors.success} style={[styles.statIcon, { bottom: -10, right: -10 }]} />
                             </View>
                         </View>
                     </View>
@@ -307,7 +313,7 @@ const styles = StyleSheet.create({
         height: 44,
         borderRadius: 14,
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'center', // Fix: Center content
         borderWidth: 1,
     },
     badge: {
@@ -323,9 +329,11 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingHorizontal: 24,
+        paddingBottom: 100, // Ensure bottom content is accessible
     },
     heroCardContainer: {
         marginBottom: 32,
+        marginTop: 10,
     },
     heroCard: {
         borderRadius: 24,
@@ -333,6 +341,10 @@ const styles = StyleSheet.create({
         minHeight: 180,
         justifyContent: 'space-between',
         zIndex: 2,
+        position: 'relative',
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
     },
     heroShadow: {
         position: 'absolute',
@@ -347,10 +359,20 @@ const styles = StyleSheet.create({
         shadowRadius: 20,
         elevation: 10,
     },
+    heroCardPattern: {
+        position: 'absolute',
+        top: -50,
+        right: -50,
+        width: 150,
+        height: 150,
+        borderRadius: 75,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+    },
     heroHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        zIndex: 1,
     },
     liveTag: {
         flexDirection: 'row',
@@ -359,6 +381,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 5,
         borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
     },
     liveDot: {
         width: 6,
@@ -375,33 +399,42 @@ const styles = StyleSheet.create({
     },
     serviceTitle: {
         color: '#fff',
-        fontSize: 26,
+        fontSize: 28,
         fontFamily: 'PlusJakartaSans-Bold',
         letterSpacing: -0.5,
         marginTop: 10,
         marginBottom: 10,
-        lineHeight: 32,
+        lineHeight: 34,
+        zIndex: 1,
+        textShadowColor: 'rgba(0,0,0,0.1)',
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
     },
     serviceInfoRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        zIndex: 1,
     },
     serviceInfoItem: {
         flexDirection: 'row',
         alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
     },
     serviceInfoText: {
-        color: 'rgba(255,255,255,0.9)',
-        fontSize: 14,
+        color: '#fff',
+        fontSize: 13,
         marginLeft: 6,
-        fontFamily: 'PlusJakartaSans-Medium',
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     dividerDot: {
         width: 4,
         height: 4,
         borderRadius: 2,
-        backgroundColor: 'rgba(255,255,255,0.3)',
-        marginHorizontal: 12,
+        backgroundColor: 'rgba(255,255,255,0.4)',
+        marginHorizontal: 8,
     },
     section: {
         marginBottom: 28,
@@ -414,22 +447,27 @@ const styles = StyleSheet.create({
     grid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        borderRadius: 24,
-        padding: 16,
         gap: 16,
-        borderWidth: 1,
+        // Removed container border/bg to let individual glass cards shine
     },
     actionItem: {
-        width: '46%', // Approximate for 2 columns with gap
-        aspectRatio: 1.1, // Slightly wider than tall
+        width: '47%', // Fixed sizing
+        aspectRatio: 1.1,
         alignItems: 'center',
         justifyContent: 'center',
-        flexGrow: 1,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.05)',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        elevation: 3,
     },
     actionIconContainer: {
         width: 56,
         height: 56,
-        borderRadius: 20,
+        borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 12,
@@ -447,6 +485,8 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 20,
         borderWidth: 1,
+        position: 'relative',
+        overflow: 'hidden',
     },
     statValue: {
         fontSize: 32,
@@ -459,16 +499,16 @@ const styles = StyleSheet.create({
     },
     statIcon: {
         position: 'absolute',
-        top: 20,
-        right: 20,
-        opacity: 0.8,
+        top: 15,
+        right: 15,
+        opacity: 0.2,
     },
     floatingChatButton: {
         position: 'absolute',
-        bottom: 30, // Adjust based on tab bar height if needed
+        bottom: 30,
         right: 24,
         width: 60,
-        height: 60,
+        height: 60, // Fixed height
         borderRadius: 30,
         shadowColor: '#4f46e5',
         shadowOffset: { width: 0, height: 4 },
@@ -478,7 +518,8 @@ const styles = StyleSheet.create({
         zIndex: 100,
     },
     floatingChatGradient: {
-        flex: 1,
+        width: 60, // Ensure gradient fills container
+        height: 60,
         borderRadius: 30,
         alignItems: 'center',
         justifyContent: 'center',

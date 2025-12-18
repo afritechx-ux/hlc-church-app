@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
     View,
     Text,
@@ -28,6 +28,7 @@ import {
     Gift,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import GivingChart from '../components/giving/GivingChart';
 
 const { width } = Dimensions.get('window');
 
@@ -68,6 +69,32 @@ export default function GivingScreen() {
 
     // Animation
     const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    const chartData = useMemo(() => {
+        const last6Months = Array.from({ length: 6 }, (_, i) => {
+            const d = new Date();
+            d.setMonth(d.getMonth() - (5 - i));
+            return d.toLocaleString('default', { month: 'short' });
+        });
+
+        const data = last6Months.map(month => ({ label: month, value: 0 }));
+
+        donations.forEach(d => {
+            // @ts-ignore - Handle both potential field names
+            const dateStr = d.date || d.createdAt;
+            if (!dateStr) return;
+
+            const date = new Date(dateStr);
+            const month = date.toLocaleString('default', { month: 'short' });
+            const found = data.find(item => item.label === month);
+            if (found) {
+                // @ts-ignore - Assuming amount exists
+                found.value += Number(d.amount);
+            }
+        });
+
+        return data;
+    }, [donations]);
 
     // Donation modal state
     const [showDonationModal, setShowDonationModal] = useState(false);
@@ -173,114 +200,154 @@ export default function GivingScreen() {
     }
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-            {/* Header with gradient */}
-            <LinearGradient
-                colors={theme.gradients.primary}
-                style={styles.header}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right']}>
+            {/* Header / Giving Card */}
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 100 }}
             >
-                <View style={styles.headerContent}>
-                    <Text style={styles.headerTitle}>My Giving</Text>
-                    <View style={styles.totalContainer}>
-                        <View style={styles.totalCard}>
-                            <View style={styles.totalIconBg}>
-                                <TrendingUp size={20} color="#10b981" />
+                <LinearGradient
+                    colors={theme.gradients.primary}
+                    style={styles.heroSection}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                >
+                    <View style={styles.headerTop}>
+                        <Text style={styles.headerTitle}>My Kingdom Investments</Text>
+                        <TouchableOpacity style={styles.historyBtn}>
+                            <Calendar size={20} color="rgba(255,255,255,0.8)" />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Premium Glass Card */}
+                    <View style={styles.totalCard}>
+                        <View style={styles.cardPattern} />
+                        <View style={styles.cardContent}>
+                            <View style={styles.cardHeader}>
+                                <View style={styles.chip} />
+                                <TrendingUp size={24} color="#fff" style={{ opacity: 0.8 }} />
                             </View>
                             <View>
-                                <Text style={styles.totalLabel}>Total Contributions</Text>
-                                <Text style={styles.totalAmount}>GHS {totalGiving.toFixed(2)}</Text>
+                                <Text style={styles.cardLabel}>TOTAL CONTRIBUTIONS</Text>
+                                <Text style={styles.cardAmount}>GHS {totalGiving.toLocaleString('en-US', { minimumFractionDigits: 2 })}</Text>
+                            </View>
+                            <View style={styles.cardFooter}>
+                                <Text style={styles.cardMemberName}>Faith Partner</Text>
+                                <Text style={styles.cardExp}>**** 2025</Text>
                             </View>
                         </View>
                     </View>
+
+                    {/* Chart Container */}
+                    <View style={styles.chartSection}>
+                        <Text style={styles.chartTitle}>Giving Trend (Last 6 Months)</Text>
+                        {/* Placeholder for Chart - Passing mock data for now if real data is scarce */}
+                        {/* <GivingChart data={mockData} color="#fff" /> */}
+                        <GivingChart data={chartData} color="#fff" />
+                    </View>
+                </LinearGradient>
+
+                {/* Quick Actions - Floating Overlap */}
+                <View style={[styles.quickActions, { backgroundColor: colors.card }]}>
+                    <TouchableOpacity
+                        style={styles.actionBtn}
+                        onPress={() => setShowDonationModal(true)}
+                    >
+                        <LinearGradient
+                            colors={['#6366f1', '#4f46e5']}
+                            style={styles.actionIcon}
+                        >
+                            <Plus size={24} color="#fff" />
+                        </LinearGradient>
+                        <Text style={[styles.actionLabel, { color: colors.text }]}>Give Now</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => { }}>
+                        <View style={[styles.actionIcon, { backgroundColor: colors.primary + '15' }]}>
+                            <Target size={24} color={colors.primary} />
+                        </View>
+                        <Text style={[styles.actionLabel, { color: colors.text }]}>Pledges</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => { }}>
+                        <View style={[styles.actionIcon, { backgroundColor: colors.success + '15' }]}>
+                            <Gift size={24} color={colors.success} />
+                        </View>
+                        <Text style={[styles.actionLabel, { color: colors.text }]}>History</Text>
+                    </TouchableOpacity>
                 </View>
 
-                {/* Decorative elements */}
-                <View style={styles.headerDecor1} />
-                <View style={styles.headerDecor2} />
-            </LinearGradient>
-
-            {/* Give Now Button */}
-            <TouchableOpacity
-                style={styles.giveButton}
-                onPress={() => setShowDonationModal(true)}
-                activeOpacity={0.9}
-            >
-                <LinearGradient
-                    colors={['#6366f1', '#4f46e5']}
-                    style={styles.giveButtonGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                >
-                    <View style={styles.giveButtonIconBg}>
-                        <Gift size={22} color="#fff" />
-                    </View>
-                    <Text style={styles.giveButtonText}>Give Now</Text>
-                    <Plus size={20} color="#fff" />
-                </LinearGradient>
-            </TouchableOpacity>
-
-            <ScrollView
-                contentContainerStyle={styles.content}
-                showsVerticalScrollIndicator={false}
-            >
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Recent Transactions</Text>
-
-                <Animated.View style={{ opacity: fadeAnim }}>
-                    {donations.length > 0 ? (
-                        donations.map((donation, index) => (
-                            <View
-                                key={donation.id}
-                                style={[styles.donationItem, { backgroundColor: colors.card }]}
-                            >
-                                <View style={[styles.donationIcon, { backgroundColor: colors.success + '15' }]}>
-                                    <DollarSign size={22} color={colors.success} />
-                                </View>
-                                <View style={styles.donationDetails}>
-                                    <Text style={[styles.fundName, { color: colors.text }]}>
-                                        {donation.fund?.name || 'Unknown Fund'}
-                                    </Text>
-                                    <View style={styles.metaRow}>
-                                        <Calendar size={12} color={colors.textMuted} />
-                                        <Text style={[styles.metaText, { color: colors.textMuted }]}>
-                                            {new Date(donation.date).toLocaleDateString('en-US', {
-                                                month: 'short',
-                                                day: 'numeric',
-                                                year: 'numeric',
-                                            })}
-                                        </Text>
-                                        <View style={[styles.methodBadge, { backgroundColor: colors.primary + '15' }]}>
-                                            <Text style={[styles.methodText, { color: colors.primary }]}>
-                                                {donation.method}
-                                            </Text>
+                {/* Funds Progress Section */}
+                <View style={styles.section}>
+                    <Text style={[styles.sectionHeader, { color: colors.text }]}>Fund Goals</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 15 }}>
+                        {funds.map((fund) => {
+                            const fundDonations = donations.filter(d => d.fund?.id === fund.id);
+                            const raised = fundDonations.reduce((sum, d) => sum + Number(d.amount), 0);
+                            const progress = fund.goal ? raised / fund.goal : 0;
+                            return (
+                                <View key={fund.id} style={[styles.fundCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                                    <View style={styles.fundHeader}>
+                                        <Text style={[styles.fundName, { color: colors.text }]}>{fund.name}</Text>
+                                        <View style={[styles.fundBadge, { backgroundColor: colors.primary + '15' }]}>
+                                            <Text style={[styles.fundBadgeText, { color: colors.primary }]}>Active</Text>
                                         </View>
                                     </View>
+                                    <Text style={styles.fundDesc} numberOfLines={2}>{fund.description || 'Supporting the vision.'}</Text>
+
+                                    {fund.goal ? (
+                                        <View style={styles.progressContainer}>
+                                            <View style={styles.progressBarBg}>
+                                                <View style={[styles.progressBarFill, { width: `${Math.min(progress * 100, 100)}%`, backgroundColor: colors.primary }]} />
+                                            </View>
+                                            <View style={styles.progressLabels}>
+                                                <Text style={[styles.progressText, { color: colors.textSecondary }]}>
+                                                    {(progress * 100).toFixed(0)}%
+                                                </Text>
+                                                <Text style={[styles.progressText, { color: colors.text }]}>
+                                                    Target: GHS {fund.goal.toLocaleString()}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    ) : (
+                                        <Text style={[styles.noGoalText, { color: colors.textMuted }]}>Open Donation Fund</Text>
+                                    )}
                                 </View>
-                                <View style={styles.amountContainer}>
-                                    <Text style={[styles.amount, { color: colors.success }]}>
+                            );
+                        })}
+                    </ScrollView>
+                </View>
+
+                {/* Recent Transactions */}
+                <View style={styles.section}>
+                    <Text style={[styles.sectionHeader, { color: colors.text, paddingHorizontal: 20 }]}>Recent Giving</Text>
+                    <View style={{ paddingHorizontal: 20 }}>
+                        {donations.length > 0 ? (
+                            donations.slice(0, 5).map((donation) => (
+                                <View key={donation.id} style={[styles.txnRow, { backgroundColor: colors.surface }]}>
+                                    <View style={[styles.txnIcon, { backgroundColor: colors.success + '15' }]}>
+                                        <DollarSign size={20} color={colors.success} />
+                                    </View>
+                                    <View style={styles.txnContent}>
+                                        <Text style={[styles.txnTitle, { color: colors.text }]}>{donation.fund?.name}</Text>
+                                        <Text style={[styles.txnDate, { color: colors.textSecondary }]}>
+                                            {new Date(donation.date).toLocaleDateString()}
+                                        </Text>
+                                    </View>
+                                    <Text style={[styles.txnAmount, { color: colors.success }]}>
                                         +GHS {Number(donation.amount).toFixed(2)}
                                     </Text>
                                 </View>
-                            </View>
-                        ))
-                    ) : (
-                        <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
-                            <View style={[styles.emptyIconBg, { backgroundColor: colors.primary + '15' }]}>
-                                <Gift size={40} color={colors.primary} />
-                            </View>
-                            <Text style={[styles.emptyTitle, { color: colors.text }]}>
-                                No Donations Yet
-                            </Text>
-                            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                                Tap "Give Now" to make your first donation and be a blessing!
-                            </Text>
-                        </View>
-                    )}
-                </Animated.View>
+                            ))
+                        ) : (
+                            <Text style={{ textAlign: 'center', color: colors.textSecondary, marginTop: 20 }}>No records found.</Text>
+                        )}
+                    </View>
+                </View>
+
             </ScrollView>
 
-            {/* Donation Modal */}
+            {/* Modal */}
             <Modal
                 visible={showDonationModal}
                 animationType="slide"
@@ -316,22 +383,15 @@ export default function GivingScreen() {
                                         <TouchableOpacity
                                             key={fund.id}
                                             style={[
-                                                styles.fundCard,
+                                                styles.fundCardSelect,
                                                 {
                                                     backgroundColor: selectedFund?.id === fund.id
                                                         ? colors.primary
                                                         : colors.inputBackground,
-                                                    borderColor: selectedFund?.id === fund.id
-                                                        ? colors.primary
-                                                        : colors.border,
                                                 },
                                             ]}
                                             onPress={() => setSelectedFund(fund)}
                                         >
-                                            <Target
-                                                size={20}
-                                                color={selectedFund?.id === fund.id ? '#fff' : colors.primary}
-                                            />
                                             <Text
                                                 style={[
                                                     styles.fundCardText,
@@ -353,7 +413,7 @@ export default function GivingScreen() {
                                     style={[styles.amountInput, { color: colors.text }]}
                                     placeholder="0.00"
                                     placeholderTextColor={colors.textMuted}
-                                    keyboardType="decimal-pad"
+                                    keyboardType="numeric"
                                     value={amount}
                                     onChangeText={setAmount}
                                 />
@@ -392,9 +452,9 @@ export default function GivingScreen() {
                             {/* Payment Method */}
                             <Text style={[styles.inputLabel, { color: colors.text }]}>Payment Channel</Text>
                             {paymentConfigs.length === 0 ? (
-                                <Text style={{ color: colors.textSecondary, fontFamily: 'PlusJakartaSans-Medium' }}>
-                                    No payment channels configured.
-                                </Text>
+                                <View style={{ padding: 20, alignItems: 'center' }}>
+                                    <Text style={{ color: colors.textSecondary }}>Loading payment methods...</Text>
+                                </View>
                             ) : (
                                 <View style={styles.methodGrid}>
                                     {paymentConfigs.map((config) => (
@@ -466,6 +526,7 @@ export default function GivingScreen() {
                             onPress={handleSubmitDonation}
                             disabled={submitting}
                             activeOpacity={0.9}
+                            style={{ marginTop: 20 }}
                         >
                             <LinearGradient
                                 colors={['#10b981', '#059669']}
@@ -499,204 +560,248 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    header: {
-        paddingHorizontal: 24,
-        paddingTop: 20,
+    heroSection: {
+        paddingTop: 0,
         paddingBottom: 40,
-        borderBottomLeftRadius: 32,
-        borderBottomRightRadius: 32,
-        position: 'relative',
-        overflow: 'hidden',
+        paddingHorizontal: 20,
+        borderBottomLeftRadius: 30,
+        borderBottomRightRadius: 30,
+        marginBottom: 20,
     },
-    headerContent: {
-        position: 'relative',
-        zIndex: 1,
+    headerTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+        marginTop: 10,
     },
     headerTitle: {
-        fontSize: 28,
+        fontSize: 22,
         fontFamily: 'PlusJakartaSans-Bold',
         color: '#fff',
-        marginBottom: 20,
     },
-    totalContainer: {
-        alignItems: 'center',
-    },
-    totalCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.95)',
-        borderRadius: 20,
-        paddingVertical: 16,
-        paddingHorizontal: 24,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
-        elevation: 6,
-    },
-    totalIconBg: {
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        backgroundColor: '#10b981' + '15',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: 16,
-    },
-    totalLabel: {
-        fontSize: 13,
-        color: '#64748b',
-        marginBottom: 2,
-        fontFamily: 'PlusJakartaSans-Medium',
-    },
-    totalAmount: {
-        fontSize: 28,
-        fontFamily: 'PlusJakartaSans-ExtraBold',
-        color: '#0f172a',
-    },
-    headerDecor1: {
-        position: 'absolute',
-        top: -40,
-        right: -40,
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-    },
-    headerDecor2: {
-        position: 'absolute',
-        bottom: -30,
-        left: 20,
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        backgroundColor: 'rgba(255,255,255,0.08)',
-    },
-    giveButton: {
-        marginHorizontal: 20,
-        marginTop: -25,
-        marginBottom: 20,
-        borderRadius: 16,
-        overflow: 'hidden',
-        shadowColor: '#6366f1',
-        shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.35,
-        shadowRadius: 12,
-        elevation: 8,
-    },
-    giveButtonGradient: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 18,
-        paddingHorizontal: 24,
-    },
-    giveButtonIconBg: {
+    historyBtn: {
         width: 40,
         height: 40,
-        borderRadius: 12,
+        borderRadius: 20,
         backgroundColor: 'rgba(255,255,255,0.2)',
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 12,
     },
-    giveButtonText: {
+    totalCard: {
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 24,
+        padding: 24,
+        position: 'relative',
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
+    },
+    cardPattern: {
+        position: 'absolute',
+        top: -50,
+        right: -50,
+        width: 150,
+        height: 150,
+        borderRadius: 100,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+    },
+    cardContent: {
+        zIndex: 1,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    chip: {
+        width: 50,
+        height: 34,
+        borderRadius: 8,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    cardLabel: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.7)',
+        fontFamily: 'PlusJakartaSans-Medium',
+        letterSpacing: 1,
+        marginBottom: 4,
+    },
+    cardAmount: {
+        fontSize: 32,
+        fontFamily: 'PlusJakartaSans-ExtraBold',
         color: '#fff',
+        letterSpacing: -1,
+    },
+    cardFooter: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20,
+        alignItems: 'flex-end',
+    },
+    cardMemberName: {
+        fontSize: 14,
+        color: '#fff',
+        fontFamily: 'PlusJakartaSans-SemiBold',
+    },
+    cardExp: {
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.8)',
+        fontFamily: 'PlusJakartaSans-Mono',
+    },
+    chartSection: {
+        marginTop: 30,
+    },
+    chartTitle: {
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.8)',
+        marginBottom: 10,
+        fontFamily: 'PlusJakartaSans-Medium',
+    },
+    chartPlaceholder: {
+        height: 100,
+        flexDirection: 'row',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        paddingHorizontal: 10,
+    },
+    bar: {
+        width: 8,
+        borderRadius: 4,
+    },
+    quickActions: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        paddingVertical: 20,
+        marginHorizontal: 20,
+        marginTop: -30,
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.1,
+        shadowRadius: 10,
+        elevation: 5,
+        marginBottom: 24,
+    },
+    actionBtn: {
+        alignItems: 'center',
+        gap: 8,
+    },
+    actionIcon: {
+        width: 50,
+        height: 50,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    actionLabel: {
+        fontSize: 12,
+        fontFamily: 'PlusJakartaSans-SemiBold',
+    },
+    section: {
+        marginBottom: 24,
+    },
+    sectionHeader: {
         fontSize: 18,
         fontFamily: 'PlusJakartaSans-Bold',
-        flex: 1,
-    },
-    content: {
-        padding: 20,
-        paddingBottom: 40,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontFamily: 'PlusJakartaSans-Bold',
         marginBottom: 16,
+        paddingHorizontal: 20,
     },
-    donationItem: {
+    fundCard: {
+        width: 280,
+        padding: 16,
+        borderRadius: 20,
+        borderWidth: 1,
+        marginRight: 0,
+    },
+    fundHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    fundName: {
+        fontSize: 16,
+        fontFamily: 'PlusJakartaSans-Bold',
+    },
+    fundBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+    fundBadgeText: {
+        fontSize: 10,
+        fontFamily: 'PlusJakartaSans-Bold',
+    },
+    fundDesc: {
+        fontSize: 13,
+        color: '#64748b',
+        marginBottom: 16,
+        lineHeight: 18,
+    },
+    progressContainer: {
+        gap: 6,
+    },
+    progressBarBg: {
+        height: 6,
+        backgroundColor: '#e2e8f0',
+        borderRadius: 3,
+        overflow: 'hidden',
+    },
+    progressBarFill: {
+        height: '100%',
+        borderRadius: 3,
+    },
+    progressLabels: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    progressText: {
+        fontSize: 11,
+        fontFamily: 'PlusJakartaSans-Medium',
+    },
+    noGoalText: {
+        fontSize: 12,
+        fontStyle: 'italic',
+    },
+    txnRow: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: 16,
         borderRadius: 16,
-        marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    donationIcon: {
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 14,
-    },
-    donationDetails: {
-        flex: 1,
-    },
-    fundName: {
-        fontSize: 16,
-        fontFamily: 'PlusJakartaSans-SemiBold',
-        marginBottom: 6,
-    },
-    metaRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    metaText: {
-        fontSize: 12,
-        marginLeft: 4,
-        marginRight: 10,
-        fontFamily: 'PlusJakartaSans-Medium',
-    },
-    methodBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 6,
-    },
-    methodText: {
-        fontSize: 10,
-        fontFamily: 'PlusJakartaSans-SemiBold',
-    },
-    amountContainer: {
-        alignItems: 'flex-end',
-    },
-    amount: {
-        fontSize: 17,
-        fontFamily: 'PlusJakartaSans-Bold',
-    },
-    emptyState: {
-        alignItems: 'center',
-        padding: 40,
-        borderRadius: 20,
-    },
-    emptyIconBg: {
-        width: 80,
-        height: 80,
-        borderRadius: 24,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 20,
-    },
-    emptyTitle: {
-        fontSize: 20,
-        fontFamily: 'PlusJakartaSans-Bold',
         marginBottom: 8,
     },
-    emptyText: {
-        fontSize: 14,
-        textAlign: 'center',
-        lineHeight: 22,
-        fontFamily: 'PlusJakartaSans-Regular',
+    txnIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
     },
-    // Modal Styles
+    txnContent: {
+        flex: 1,
+    },
+    txnTitle: {
+        fontSize: 15,
+        fontFamily: 'PlusJakartaSans-SemiBold',
+        marginBottom: 2,
+    },
+    txnDate: {
+        fontSize: 12,
+        fontFamily: 'PlusJakartaSans-Medium',
+    },
+    txnAmount: {
+        fontSize: 15,
+        fontFamily: 'PlusJakartaSans-Bold',
+    },
+    // Modal
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0.6)',
         justifyContent: 'flex-end',
     },
     modalContent: {
@@ -720,13 +825,13 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     modalTitle: {
-        fontSize: 24,
+        fontSize: 22,
         fontFamily: 'PlusJakartaSans-Bold',
     },
     closeButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 12,
+        width: 36,
+        height: 36,
+        borderRadius: 18,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -741,36 +846,35 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         gap: 10,
     },
-    fundCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    fundCardSelect: {
         paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 12,
-        borderWidth: 1.5,
+        paddingVertical: 10,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.1)',
     },
     fundCardText: {
         fontSize: 14,
         fontFamily: 'PlusJakartaSans-Medium',
-        marginLeft: 8,
     },
     amountInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderRadius: 14,
-        borderWidth: 1.5,
+        borderWidth: 1,
         paddingHorizontal: 16,
+        backgroundColor: '#f8fafc',
     },
     currencyPrefix: {
-        fontSize: 18,
-        fontFamily: 'PlusJakartaSans-SemiBold',
+        fontSize: 16,
+        fontFamily: 'PlusJakartaSans-Bold',
         marginRight: 8,
     },
     amountInput: {
         flex: 1,
-        fontSize: 32,
+        fontSize: 28,
         fontFamily: 'PlusJakartaSans-Bold',
-        paddingVertical: 16,
+        paddingVertical: 14,
     },
     quickAmounts: {
         flexDirection: 'row',
@@ -781,7 +885,7 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingVertical: 10,
         borderRadius: 10,
-        borderWidth: 1.5,
+        borderWidth: 1,
         alignItems: 'center',
     },
     quickAmountText: {
@@ -796,16 +900,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 16,
         borderRadius: 14,
-        borderWidth: 1.5,
+        borderWidth: 1,
     },
     methodIcon: {
         fontSize: 24,
-        marginRight: 12,
+        marginRight: 10,
     },
     methodLabel: {
         fontSize: 15,
-        fontFamily: 'PlusJakartaSans-Medium',
-        flex: 1,
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     methodCheck: {
         marginLeft: 'auto',
@@ -815,23 +918,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 18,
-        borderRadius: 14,
-        marginTop: 24,
+        borderRadius: 16,
+        gap: 8,
     },
     submitButtonText: {
         color: '#fff',
         fontSize: 18,
         fontFamily: 'PlusJakartaSans-Bold',
-        marginLeft: 10,
     },
-    noFundsMessage: {
-        padding: 16,
-        borderRadius: 12,
-        marginBottom: 16,
-    },
-    noFundsText: {
-        fontSize: 14,
-        textAlign: 'center',
-        fontFamily: 'PlusJakartaSans-Medium',
-    },
+    noFundsMessage: { padding: 16, borderRadius: 12 },
+    noFundsText: { textAlign: 'center' },
 });
+
