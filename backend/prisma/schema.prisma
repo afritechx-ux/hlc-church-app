@@ -197,6 +197,8 @@ model PaymentConfig {
   
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
+  @@map("payment_configurations")
 }
 
 model Donation {

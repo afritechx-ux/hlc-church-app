@@ -461,8 +461,8 @@ export default function GroupChatScreen({ navigation, route }: any) {
             {/* Messages */}
             <KeyboardAvoidingView
                 style={styles.flex}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                keyboardVerticalOffset={0}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 30}
             >
                 <Animated.View style={[styles.flex, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
                     <FlatList
@@ -570,6 +570,7 @@ export default function GroupChatScreen({ navigation, route }: any) {
                         </LinearGradient>
                     </TouchableOpacity>
                 </View>
+                {Platform.OS === 'android' && <View style={{ height: 20 }} />}
             </KeyboardAvoidingView>
 
             {/* Emoji Picker */}
@@ -578,7 +579,7 @@ export default function GroupChatScreen({ navigation, route }: any) {
                 onClose={() => setShowEmojiPicker(false)}
                 onSelect={handleEmojiSelect}
             />
-        </SafeAreaView>
+        </SafeAreaView >
     );
 }
 

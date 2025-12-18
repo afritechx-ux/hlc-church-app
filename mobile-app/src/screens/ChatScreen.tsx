@@ -481,8 +481,8 @@ export default function ChatScreen({ navigation }: any) {
 
             <KeyboardAvoidingView
                 style={styles.flex}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 30}
             >
                 <FlatList
                     ref={flatListRef}
@@ -567,6 +567,7 @@ export default function ChatScreen({ navigation }: any) {
                         )}
                     </TouchableOpacity>
                 </View>
+                {Platform.OS === 'android' && <View style={{ height: 20 }} />}
             </KeyboardAvoidingView>
 
             <EmojiPicker

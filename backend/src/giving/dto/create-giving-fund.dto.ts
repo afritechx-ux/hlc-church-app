@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateGivingFundDto {
     @IsNotEmpty()
@@ -10,6 +10,6 @@ export class CreateGivingFundDto {
     description?: string;
 
     @IsOptional()
-    //@IsNumber() // Can be validated as string or number depending on transform
+    @IsNumber()
     goal?: number;
 }

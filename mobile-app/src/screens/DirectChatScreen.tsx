@@ -405,7 +405,8 @@ export default function DirectChatScreen({ navigation, route }: any) {
             {/* Messages */}
             <KeyboardAvoidingView
                 style={styles.flex}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 30}
             >
                 <FlatList
                     ref={flatListRef}
@@ -462,6 +463,7 @@ export default function DirectChatScreen({ navigation, route }: any) {
                         )}
                     </TouchableOpacity>
                 </View>
+                {Platform.OS === 'android' && <View style={{ height: 20 }} />}
             </KeyboardAvoidingView>
 
             {/* Emoji Picker Modal */}
@@ -470,7 +472,7 @@ export default function DirectChatScreen({ navigation, route }: any) {
                 onClose={() => setShowEmojiPicker(false)}
                 onSelect={handleEmojiSelect}
             />
-        </SafeAreaView>
+        </SafeAreaView >
     );
 }
 
