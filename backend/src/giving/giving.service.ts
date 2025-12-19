@@ -48,6 +48,10 @@ export class GivingService {
                 fundId: createDonationDto.fundId,
                 memberId: createDonationDto.memberId,
                 method: (createDonationDto.method as any) || PaymentMethod.CASH,
+                date: createDonationDto.date ? new Date(createDonationDto.date) : undefined,
+                note: createDonationDto.note,
+                reference: createDonationDto.reference,
+                gateway: createDonationDto.gateway,
             },
         });
     }
@@ -61,6 +65,27 @@ export class GivingService {
             orderBy: {
                 date: 'desc',
             },
+        });
+    }
+
+    updateDonation(id: string, dto: any) {
+        const data: any = { ...dto };
+        if (data.date) {
+            data.date = new Date(data.date);
+        }
+        if (data.method) {
+            data.method = data.method as PaymentMethod;
+        }
+
+        return this.prisma.donation.update({
+            where: { id },
+            data,
+        });
+    }
+
+    removeDonation(id: string) {
+        return this.prisma.donation.delete({
+            where: { id },
         });
     }
 
@@ -102,5 +127,101 @@ export class GivingService {
             where: { id },
             data: { isActive },
         });
+    }
+    // Services
+    async getAnalyticsOverview() {
+        try {
+            const totalDonations = await this.prisma.donation.aggregate({
+                _sum: { amount: true },
+            });
+
+            const activeDonors = await this.prisma.donation.groupBy({
+                by: ['memberId'],
+                _count: { memberId: true },
+            });
+
+            // Calculate growth (this month vs last month)
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+
+            const thisMonth = await this.prisma.donation.aggregate({
+                _sum: { amount: true },
+                where: { date: { gte: startOfMonth } },
+            });
+
+            const lastMonth = await this.prisma.donation.aggregate({
+                _sum: { amount: true },
+                where: { date: { gte: startOfLastMonth, lte: endOfLastMonth } },
+            });
+
+            const current = thisMonth._sum.amount ? thisMonth._sum.amount.toNumber() : 0;
+            const previous = lastMonth._sum.amount ? lastMonth._sum.amount.toNumber() : 0;
+            let growth = 0;
+            if (previous > 0) {
+                growth = ((current - previous) / previous) * 100;
+            }
+
+            return {
+                totalAmount: totalDonations._sum.amount ? totalDonations._sum.amount.toNumber() : 0,
+                activeDonors: activeDonors.length,
+                monthlyGrowth: growth,
+                thisMonthAmount: current,
+            };
+        } catch (error) {
+            console.error('Error in getAnalyticsOverview:', error);
+            throw error;
+        }
+    }
+
+    async getDonationTrends() {
+        try {
+            // Daily trends for the last 30 days
+            const limitDate = new Date();
+            limitDate.setDate(limitDate.getDate() - 30);
+
+            const donations = await this.prisma.donation.findMany({
+                where: { date: { gte: limitDate } },
+                select: { date: true, amount: true },
+                orderBy: { date: 'asc' },
+            });
+
+            // Group by day (YYYY-MM-DD)
+            const dailyTrends: Record<string, number> = {};
+            donations.forEach(d => {
+                if (d.date && d.amount) {
+                    const day = d.date.toISOString().split('T')[0];
+                    const amount = d.amount.toNumber(); // Decimal to number
+                    dailyTrends[day] = (dailyTrends[day] || 0) + amount;
+                }
+            });
+
+            return Object.entries(dailyTrends).map(([date, amount]) => ({ date, amount }));
+        } catch (error) {
+            console.error('Error in getDonationTrends:', error);
+            throw error;
+        }
+    }
+
+    async getDonationsByFund() {
+        try {
+            const result = await this.prisma.donation.groupBy({
+                by: ['fundId'],
+                _sum: { amount: true },
+            });
+
+            // Fetch fund names
+            const funds = await this.prisma.givingFund.findMany();
+            const fundMap = new Map(funds.map(f => [f.id, f.name]));
+
+            return result.map(item => ({
+                name: fundMap.get(item.fundId) || 'Unknown Fund',
+                amount: item._sum.amount ? item._sum.amount.toNumber() : 0,
+            }));
+        } catch (error) {
+            console.error('Error in getDonationsByFund:', error);
+            throw error;
+        }
     }
 }

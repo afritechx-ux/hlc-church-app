@@ -21,7 +21,13 @@ export default function QRScanScreen({ navigation }: any) {
         setScanned(true);
 
         try {
-            await client.post('/attendance/qr-check-in', { token: data });
+            // Support both raw token and URL-based QR codes
+            let token = data;
+            if (data.startsWith('http') && data.includes('token=')) {
+                token = data.split('token=')[1].split('&')[0];
+            }
+
+            await client.post('/attendance/qr-check-in', { token });
             Alert.alert('Success', 'Checked in successfully!', [
                 { text: 'OK', onPress: () => navigation.goBack() }
             ]);

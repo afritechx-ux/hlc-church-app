@@ -23,15 +23,20 @@ export class ReportsService {
         });
 
         const headers = ['Date', 'Service', 'Member Name', 'Email', 'Phone', 'Check-In Time', 'Method'];
-        const rows = records.map(r => [
-            new Date(r.serviceOccurrence.date).toLocaleDateString(),
-            r.serviceOccurrence.template.name,
-            `${r.member.firstName} ${r.member.lastName}`,
-            r.member.email || '',
-            r.member.phone || '',
-            new Date(r.checkInTime).toLocaleTimeString(),
-            r.method,
-        ]);
+        const rows = records.map(r => {
+            const memberName = r.member ? `${r.member.firstName} ${r.member.lastName}` : (r.visitorName || 'Visitor');
+            const phone = r.member?.phone || r.visitorPhone || '';
+
+            return [
+                new Date(r.serviceOccurrence.date).toLocaleDateString(),
+                r.serviceOccurrence.template.name,
+                memberName,
+                r.member?.email || '',
+                phone,
+                new Date(r.checkInTime).toLocaleTimeString(),
+                r.method,
+            ];
+        });
 
         return this.toCsv(headers, rows);
     }

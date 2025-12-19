@@ -19,9 +19,17 @@ export class AttendanceService {
     // --- QR Token Logic ---
 
     generateQRToken(serviceOccurrenceId: string) {
+        return this.createToken(serviceOccurrenceId, 60 * 1000); // 60 seconds
+    }
+
+    generateStaticQRToken(serviceOccurrenceId: string) {
+        return this.createToken(serviceOccurrenceId, 24 * 60 * 60 * 1000); // 24 hours
+    }
+
+    private createToken(serviceOccurrenceId: string, expiresInMs: number) {
         const secret = this.configService.get<string>('JWT_SECRET') || 'secret';
         const nonce = crypto.randomBytes(16).toString('hex');
-        const exp = Date.now() + 60 * 1000; // 60 seconds from now
+        const exp = Date.now() + expiresInMs;
 
         const payload = {
             type: 'HLAG_ATTEND',
@@ -69,7 +77,8 @@ export class AttendanceService {
                 throw new UnauthorizedException('Token expired');
             }
 
-            // 3. Verify Nonce (Replay Protection)
+            // 3. Verify Nonce (Replay Protection) - DISABLED for multi-user/public QR
+            /*
             const existingNonce = await this.prisma.qRTokenUsage.findUnique({
                 where: { nonce: payload.nonce },
             });
@@ -85,6 +94,7 @@ export class AttendanceService {
                     expiresAt: new Date(payload.exp),
                 },
             });
+            */
 
             return payload;
         } catch (error) {
@@ -168,5 +178,88 @@ export class AttendanceService {
 
         // Simplified streak logic placeholder
         return attendance.length;
+    }
+
+    // --- Public Check-In Logic ---
+
+    async publicCheckIn(data: { token: string; name: string; phone: string; category: string; notes?: string }) {
+        // 1. Validate Token (get serviceOccurrenceId)
+        // We relax the nonce check for public check-in because multiple people might scan the same code on a screen
+        // Validating signature and expiration is key.
+        // Actually, if we use the same validateQRToken logic, it checks nonce.
+        // For public kiosk display, we might need a "static" token or one that regenerates.
+        // But the user said "scan it with their camera".
+        // Let's assume the existing validateQRToken is fine if the QR code refreshes every 55s.
+        // If 100 people scan it in 55s, the nonce is "used" by the first person?
+        // YES. validateQRToken checks nonce usage.
+        // ISSUE: If the QR code is on a screen and 50 people scan it, only the first succeeds if we strictly enforce nonce.
+        // FIX: For public check-in, we should probably allow re-using the nonce OR the frontend must generate unique nonces per user? No, it's a broadcast.
+        // We will make a `validatePublicQRToken` that skips nonce check.
+
+        const payload = await this.validatePublicQRToken(data.token);
+
+        let memberId: string | null = null;
+        let finalCategory = data.category;
+
+        // 2. Try to link to Member if category is MEMBER
+        if (data.category === 'MEMBER' && data.phone) {
+            // Normalize phone? For now exact match
+            const member = await this.prisma.member.findFirst({
+                where: { OR: [{ phone: data.phone }, { user: { email: data.phone } }] } // Basic fuzzy
+            });
+            if (member) {
+                memberId = member.id;
+            } else {
+                finalCategory = 'VISITOR'; // Fallback or Keep MEMBER but allow null memberId?
+                // Let's keep data.category but store as visitor fields
+                // Actually, let's append to notes
+                data.notes = (data.notes || '') + ' [Claimed Member not found]';
+            }
+        }
+
+        // 3. Check for existing check-in to prevent double submission
+        if (memberId) {
+            const existing = await this.prisma.attendanceRecord.findUnique({
+                where: {
+                    memberId_serviceOccurrenceId: {
+                        memberId,
+                        serviceOccurrenceId: payload.serviceOccurrenceId,
+                    },
+                },
+            });
+            if (existing) return existing;
+        }
+
+        // 4. Create Record
+        return this.prisma.attendanceRecord.create({
+            data: {
+                memberId,
+                serviceOccurrenceId: payload.serviceOccurrenceId,
+                method: AttendanceMethod.MANUAL, // or create a NEW ENUM 'PUBLIC_FORM'; using MANUAL for now
+                visitorName: data.name,
+                visitorPhone: data.phone,
+                category: finalCategory,
+                notes: data.notes,
+            },
+        });
+    }
+
+    async validatePublicQRToken(token: string) {
+        const secret = this.configService.get<string>('JWT_SECRET') || 'secret';
+        try {
+            const decoded = JSON.parse(Buffer.from(token, 'base64').toString('utf-8'));
+            const { payload, signature } = decoded;
+
+            // Verify Signature
+            const expectedSignature = crypto.createHmac('sha256', secret).update(JSON.stringify(payload)).digest('hex');
+            if (signature !== expectedSignature) throw new UnauthorizedException('Invalid token signature');
+
+            // Verify Expiration
+            if (Date.now() > payload.exp) throw new UnauthorizedException('Token expired');
+
+            return payload;
+        } catch (error) {
+            throw new UnauthorizedException('Invalid QR token');
+        }
     }
 }

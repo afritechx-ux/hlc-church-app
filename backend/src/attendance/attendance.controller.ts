@@ -21,9 +21,19 @@ export class AttendanceController {
         return this.attendanceService.qrCheckIn(userId, qrCheckInDto.token);
     }
 
+    @Post('public-check-in')
+    publicCheckIn(@Body() data: any) {
+        return this.attendanceService.publicCheckIn(data);
+    }
+
     @Get('qr-token/:occurrenceId')
     getQrToken(@Param('occurrenceId') occurrenceId: string) {
         return this.attendanceService.generateQRToken(occurrenceId);
+    }
+
+    @Get('static-qr-token/:occurrenceId')
+    getStaticQrToken(@Param('occurrenceId') occurrenceId: string) {
+        return this.attendanceService.generateStaticQRToken(occurrenceId);
     }
 
     @Get('service/:occurrenceId')

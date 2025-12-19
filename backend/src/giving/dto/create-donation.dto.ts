@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsDateString } from 'class-validator';
 
 export enum PaymentMethod {
     CASH = 'CASH',
@@ -25,4 +25,20 @@ export class CreateDonationDto {
     @IsOptional()
     @IsEnum(PaymentMethod)
     method?: PaymentMethod;
+
+    @IsOptional()
+    @IsString()
+    reference?: string;
+
+    @IsOptional()
+    @IsString()
+    gateway?: string;
+
+    @IsOptional()
+    @IsDateString()
+    date?: string;
+
+    @IsOptional()
+    @IsString()
+    note?: string;
 }

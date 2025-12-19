@@ -141,14 +141,21 @@ model ServiceOccurrence {
 
 model AttendanceRecord {
   id                  String            @id @default(uuid())
-  member              Member            @relation(fields: [memberId], references: [id])
-  memberId            String
+  
+  member              Member?           @relation(fields: [memberId], references: [id])
+  memberId            String?
   
   serviceOccurrence   ServiceOccurrence @relation(fields: [serviceOccurrenceId], references: [id])
   serviceOccurrenceId String
   
   checkInTime         DateTime          @default(now())
-  method              AttendanceMethod  @default(MANUAL)
+  method              AttendanceMethod  @default(MANUAL) // e.g. QR, MANUAL, VISITOR_FORM
+  
+  // Visitor / Feedback Fields
+  visitorName         String?
+  visitorPhone        String?
+  category            String?           // MEMBER, VISITOR
+  notes               String?           // Feedback or reason
   
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
@@ -171,6 +178,7 @@ enum PaymentMethod {
   BANK_TRANSFER
   USSD
   OTHER
+  ONLINE
 }
 
 model GivingFund {
@@ -202,15 +210,17 @@ model PaymentConfig {
 
 model Donation {
   id        String        @id @default(uuid())
-  amount    Decimal
+  amount    Decimal       @db.Decimal(10, 2)
   date      DateTime      @default(now())
   method    PaymentMethod @default(CASH)
+  note      String?
+  reference String?       // Payment gateway reference
+  gateway   String?       // e.g., 'PAYSTACK', 'STRIPE'
   
-  fund      GivingFund    @relation(fields: [fundId], references: [id])
-  fundId    String
-  
-  member    Member?       @relation(fields: [memberId], references: [id])
   memberId  String?
+  member    Member?       @relation(fields: [memberId], references: [id])
+  fundId    String
+  fund      GivingFund    @relation(fields: [fundId], references: [id])
   
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
