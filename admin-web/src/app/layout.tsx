@@ -25,7 +25,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider>
-
+          {/* VERSION: 2024-12-20-v2 - PUBLIC ROUTES SEPARATED */}
           {children}
           <Toaster
             position="top-right"
