@@ -31,16 +31,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const initAuth = async () => {
-            // Bypass auth check for public routes
-            // Check both Next.js pathname and window location for robustness
-            // Use includes() instead of startsWith() to handle potential locale prefixes (e.g. /en/public)
-            const currentPath = pathname || window.location.pathname;
-            if (currentPath?.toLowerCase().includes('/public') || currentPath?.toLowerCase().includes('/check-in')) {
-                console.log('Public route detected, skipping auth check');
-                setIsLoading(false);
-                return;
-            }
-
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 setIsLoading(false);
