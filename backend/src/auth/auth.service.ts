@@ -166,4 +166,37 @@ export class AuthService {
             refresh_token: rt,
         };
     }
+
+    async getCurrentUser(userId: string) {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+                id: true,
+                email: true,
+                role: true,
+                createdAt: true,
+            },
+        });
+
+        if (!user) {
+            throw new ForbiddenException('User not found');
+        }
+
+        // Find the linked member
+        const member = await this.prisma.member.findFirst({
+            where: { userId: userId },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                phone: true,
+            },
+        });
+
+        return {
+            ...user,
+            member: member || null,
+        };
+    }
 }

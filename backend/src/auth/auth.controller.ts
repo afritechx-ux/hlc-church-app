@@ -49,7 +49,7 @@ export class AuthController {
     }
 
     @Get('me')
-    getMe(@GetCurrentUser() user: any) {
-        return user;
+    async getMe(@GetCurrentUser('sub') userId: string) {
+        return this.authService.getCurrentUser(userId);
     }
 }
