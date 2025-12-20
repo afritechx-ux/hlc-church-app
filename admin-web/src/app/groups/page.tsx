@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import api from '@/lib/api';
+import toast from 'react-hot-toast';
 import {
     Users,
     Plus,
@@ -106,6 +107,8 @@ export default function GroupsPage() {
         leaderId: '',
     });
 
+    const [submitting, setSubmitting] = useState(false);
+
     useEffect(() => {
         fetchGroups();
         fetchMembers();
@@ -133,6 +136,7 @@ export default function GroupsPage() {
 
     const handleCreateGroup = async (e: React.FormEvent) => {
         e.preventDefault();
+        setSubmitting(true);
         try {
             const payload = {
                 ...formData,
@@ -143,18 +147,23 @@ export default function GroupsPage() {
                 location: formData.location || undefined,
             };
             await api.post('/groups', payload);
+            toast.success('Group created successfully');
             setShowCreateModal(false);
             resetForm();
             fetchGroups();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to create group', error);
-            alert('Failed to create group');
+            const message = error.response?.data?.message || 'Failed to create group';
+            toast.error(message);
+        } finally {
+            setSubmitting(false);
         }
     };
 
     const handleUpdateGroup = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedGroup) return;
+        setSubmitting(true);
         try {
             const payload = {
                 ...formData,
@@ -165,12 +174,16 @@ export default function GroupsPage() {
                 location: formData.location || undefined,
             };
             await api.patch(`/groups/${selectedGroup.id}`, payload);
+            toast.success('Group updated successfully');
             setShowEditModal(false);
             resetForm();
             fetchGroups();
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to update group', error);
-            alert('Failed to update group');
+            const message = error.response?.data?.message || 'Failed to update group';
+            toast.error(message);
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -624,9 +637,10 @@ export default function GroupsPage() {
                                                 </button>
                                                 <button
                                                     type="submit"
-                                                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold text-lg shadow-lg"
+                                                    disabled={submitting}
+                                                    className={`px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold text-lg shadow-lg ${submitting ? 'opacity-70 cursor-not-allowed' : ''}`}
                                                 >
-                                                    {showEditModal ? '✓ Save Changes' : '✓ Create Group'}
+                                                    {submitting ? 'Processing...' : (showEditModal ? '✓ Save Changes' : '✓ Create Group')}
                                                 </button>
                                             </div>
                                         </form>
