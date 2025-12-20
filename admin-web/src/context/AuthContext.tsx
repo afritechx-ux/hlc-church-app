@@ -32,7 +32,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const initAuth = async () => {
             // Bypass auth check for public routes
-            if (pathname?.startsWith('/public')) {
+            // Check both Next.js pathname and window location for robustness
+            const currentPath = pathname || window.location.pathname;
+            if (currentPath?.toLowerCase().startsWith('/public')) {
                 setIsLoading(false);
                 return;
             }
