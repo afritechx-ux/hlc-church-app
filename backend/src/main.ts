@@ -12,8 +12,9 @@ async function bootstrap() {
   app.use(helmet());
 
   // Security: CORS configuration
+  // Security: CORS configuration
   app.enableCors({
-    origin: process.env.CORS_ORIGINS?.split(',') || true,
+    origin: true, // Reflects the request origin, allowing all
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
