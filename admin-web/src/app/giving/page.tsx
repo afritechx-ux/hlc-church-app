@@ -52,15 +52,7 @@ export default function GivingPage() {
     const fetchAllData = async () => {
         setLoading(true);
         try {
-            const [
-                statsRes,
-                trendsRes,
-                fundsDistRes,
-                donationsRes,
-                fundsRes,
-                configsRes,
-                membersRes
-            ] = await Promise.all([
+            const results = await Promise.allSettled([
                 api.get('/giving/analytics/overview'),
                 api.get('/giving/analytics/trends'),
                 api.get('/giving/analytics/by-fund'),
@@ -70,14 +62,47 @@ export default function GivingPage() {
                 api.get('/members')
             ]);
 
-            setStats(statsRes.data);
-            setTrends(trendsRes.data);
-            setFundDistribution(fundsDistRes.data);
-            setDonations(donationsRes.data);
-            setFunds(fundsRes.data);
-            setPaymentConfigs(configsRes.data);
-            setMembers(membersRes.data);
+            const [
+                statsRes,
+                trendsRes,
+                fundsDistRes,
+                donationsRes,
+                fundsRes,
+                configsRes,
+                membersRes
+            ] = results;
+
+            // Handle successes
+            if (statsRes.status === 'fulfilled') setStats(statsRes.value.data);
+            else toast.error('Failed to load: Overview Stats');
+
+            if (trendsRes.status === 'fulfilled') setTrends(trendsRes.value.data);
+            else toast.error('Failed to load: Donation Trends');
+
+            if (fundsDistRes.status === 'fulfilled') setFundDistribution(fundsDistRes.value.data);
+            else toast.error('Failed to load: Fund Distribution');
+
+            if (donationsRes.status === 'fulfilled') setDonations(donationsRes.value.data);
+            else toast.error('Failed to load: Donations');
+
+            if (fundsRes.status === 'fulfilled') setFunds(fundsRes.value.data);
+            else toast.error('Failed to load: Funds List');
+
+            if (configsRes.status === 'fulfilled') setPaymentConfigs(configsRes.value.data);
+            else toast.error('Failed to load: Payment Configs');
+
+            if (membersRes.status === 'fulfilled') setMembers(membersRes.value.data);
+            else toast.error('Failed to load: Members List');
+
+            // Log detailed errors to console for debugging
+            results.forEach((res, index) => {
+                if (res.status === 'rejected') {
+                    console.error(`Request ${index} failed:`, res.reason);
+                }
+            });
         } catch (e) {
+            console.error('Critical error in fetchAllData:', e);
+            toast.error('Critical failure loading dashboard');
             console.error(e);
             toast.error('Failed to load dashboard data');
         } finally {
