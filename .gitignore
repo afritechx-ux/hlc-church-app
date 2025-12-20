@@ -54,3 +54,4 @@ mobile-app/dist/
 # Debug scripts (we created these for debugging)
 backend/check-members.js
 backend/fix-member-links.js
+.vercel

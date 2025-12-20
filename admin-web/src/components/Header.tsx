@@ -16,7 +16,11 @@ interface Notification {
     createdAt: string;
 }
 
-export default function Header() {
+interface HeaderProps {
+    title?: string;
+}
+
+export default function Header({ title }: HeaderProps = {}) {
     const { logout } = useAuth();
     const [showNotifications, setShowNotifications] = useState(false);
     const [showProfile, setShowProfile] = useState(false);
@@ -109,11 +113,17 @@ export default function Header() {
         >
             {/* Search */}
             <div className="flex-1 max-w-md">
-                <input
-                    type="search"
-                    placeholder="Search members, services..."
-                    className="input-modern w-full"
-                />
+                {title ? (
+                    <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 to-purple-600">
+                        {title}
+                    </h1>
+                ) : (
+                    <input
+                        type="search"
+                        placeholder="Search members, services..."
+                        className="input-modern w-full"
+                    />
+                )}
             </div>
 
             {/* Actions */}
