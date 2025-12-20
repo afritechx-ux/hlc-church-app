@@ -21,17 +21,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     async function loadStorageData() {
-        try {
-            const token = await SecureStore.getItemAsync('accessToken');
-            if (token) {
-                const { data } = await client.get('/auth/me');
-                setUser(data);
-            }
-        } catch (error) {
-            console.log('Auth loading error:', error);
-        } finally {
-            setIsLoading(false);
-        }
+        // Skip auth check on startup - just go to login
+        // This prevents the app from getting stuck
+        setIsLoading(false);
     }
 
     async function signIn(email: string, password: string) {

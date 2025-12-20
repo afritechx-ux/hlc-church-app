@@ -19,6 +19,12 @@ import {
     Filter,
     MoreVertical,
     ChevronDown,
+    BarChart3,
+    Send,
+    Link,
+    Copy,
+    CheckCircle,
+    Bell,
 } from 'lucide-react';
 
 interface GroupMember {
@@ -80,7 +86,14 @@ export default function GroupsPage() {
     const [showEditModal, setShowEditModal] = useState(false);
     const [showMembersModal, setShowMembersModal] = useState(false);
     const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+    const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
+    const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+    const [showInviteModal, setShowInviteModal] = useState(false);
     const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+    const [analytics, setAnalytics] = useState<any>(null);
+    const [inviteCode, setInviteCode] = useState('');
+    const [announcement, setAnnouncement] = useState({ title: '', message: '' });
+    const [copiedInvite, setCopiedInvite] = useState(false);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -217,6 +230,59 @@ export default function GroupsPage() {
             leaderId: '',
         });
         setSelectedGroup(null);
+    };
+
+    // ======== ENTERPRISE HANDLERS ========
+
+    const openAnalyticsModal = async (group: Group) => {
+        setSelectedGroup(group);
+        try {
+            const res = await api.get(`/groups/${group.id}/analytics`);
+            setAnalytics(res.data);
+            setShowAnalyticsModal(true);
+        } catch (error) {
+            console.error('Failed to fetch analytics', error);
+            alert('Failed to load analytics');
+        }
+    };
+
+    const openAnnouncementModal = (group: Group) => {
+        setSelectedGroup(group);
+        setAnnouncement({ title: '', message: '' });
+        setShowAnnouncementModal(true);
+    };
+
+    const handleSendAnnouncement = async () => {
+        if (!selectedGroup || !announcement.title || !announcement.message) return;
+        try {
+            await api.post(`/groups/${selectedGroup.id}/announce`, announcement);
+            alert('Announcement sent successfully!');
+            setShowAnnouncementModal(false);
+            setAnnouncement({ title: '', message: '' });
+        } catch (error) {
+            console.error('Failed to send announcement', error);
+            alert('Failed to send announcement');
+        }
+    };
+
+    const openInviteModal = async (group: Group) => {
+        setSelectedGroup(group);
+        setCopiedInvite(false);
+        try {
+            const res = await api.post(`/groups/${group.id}/invite`);
+            setInviteCode(res.data.inviteCode);
+            setShowInviteModal(true);
+        } catch (error) {
+            console.error('Failed to generate invite', error);
+            alert('Failed to generate invite link');
+        }
+    };
+
+    const copyInviteLink = () => {
+        const link = `${window.location.origin}/join/${inviteCode}`;
+        navigator.clipboard.writeText(link);
+        setCopiedInvite(true);
+        setTimeout(() => setCopiedInvite(false), 2000);
     };
 
     const filteredGroups = groups.filter(group => {
@@ -383,19 +449,48 @@ export default function GroupsPage() {
                                             )}
                                         </div>
 
-                                        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <Users className="h-4 w-4 text-gray-400" />
-                                                <span className="text-sm text-gray-600 dark:text-gray-300">
-                                                    {group.memberCount} member{group.memberCount !== 1 ? 's' : ''}
-                                                </span>
+                                        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                                            {/* Enterprise Actions */}
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <button
+                                                    onClick={() => openAnalyticsModal(group)}
+                                                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                                    title="View Analytics"
+                                                >
+                                                    <BarChart3 className="h-3.5 w-3.5" />
+                                                    Analytics
+                                                </button>
+                                                <button
+                                                    onClick={() => openAnnouncementModal(group)}
+                                                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                                    title="Send Announcement"
+                                                >
+                                                    <Bell className="h-3.5 w-3.5" />
+                                                    Announce
+                                                </button>
+                                                <button
+                                                    onClick={() => openInviteModal(group)}
+                                                    className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                                                    title="Generate Invite Link"
+                                                >
+                                                    <Link className="h-3.5 w-3.5" />
+                                                    Invite
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => openMembersModal(group)}
-                                                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-                                            >
-                                                Manage Members
-                                            </button>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <Users className="h-4 w-4 text-gray-400" />
+                                                    <span className="text-sm text-gray-600 dark:text-gray-300">
+                                                        {group.memberCount} member{group.memberCount !== 1 ? 's' : ''}
+                                                    </span>
+                                                </div>
+                                                <button
+                                                    onClick={() => openMembersModal(group)}
+                                                    className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                                                >
+                                                    Manage Members
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -636,6 +731,172 @@ export default function GroupsPage() {
                                                 className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
                                             >
                                                 Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Analytics Modal */}
+                        {showAnalyticsModal && selectedGroup && analytics && (
+                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-lg">
+                                    <div className="p-6">
+                                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                            <BarChart3 className="h-6 w-6 text-primary-600" />
+                                            {selectedGroup.name} - Analytics
+                                        </h2>
+                                        <div className="space-y-4">
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{analytics.totalMembers}</div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">Total Members</div>
+                                                </div>
+                                                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                                    <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                                                        {analytics.lastActivity ? new Date(analytics.lastActivity).toLocaleDateString() : 'N/A'}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500 dark:text-gray-400">Last Activity</div>
+                                                </div>
+                                            </div>
+                                            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                                <h4 className="font-medium text-gray-900 dark:text-white mb-2">Role Distribution</h4>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {Object.entries(analytics.roleDistribution || {}).map(([role, count]) => (
+                                                        <span key={role} className="px-2 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 text-sm rounded">
+                                                            {role}: {count as number}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                                <h4 className="font-medium text-gray-900 dark:text-white mb-2">Monthly Growth (Last 6 Months)</h4>
+                                                <div className="flex items-end gap-2 h-20">
+                                                    {(analytics.monthlyGrowth || []).map((item: any, i: number) => (
+                                                        <div key={i} className="flex-1 flex flex-col items-center">
+                                                            <div
+                                                                className="w-full bg-primary-600 rounded-t"
+                                                                style={{ height: `${Math.max(item.count * 10, 4)}px` }}
+                                                            ></div>
+                                                            <span className="text-xs text-gray-500 mt-1">{item.month}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-end mt-6">
+                                            <button
+                                                onClick={() => setShowAnalyticsModal(false)}
+                                                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                                            >
+                                                Close
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Announcement Modal */}
+                        {showAnnouncementModal && selectedGroup && (
+                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-lg">
+                                    <div className="p-6">
+                                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                            <Bell className="h-6 w-6 text-primary-600" />
+                                            Send Announcement to {selectedGroup.name}
+                                        </h2>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    Title *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={announcement.title}
+                                                    onChange={(e) => setAnnouncement({ ...announcement, title: e.target.value })}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                                    placeholder="Announcement title..."
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    Message *
+                                                </label>
+                                                <textarea
+                                                    value={announcement.message}
+                                                    onChange={(e) => setAnnouncement({ ...announcement, message: e.target.value })}
+                                                    rows={4}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                                    placeholder="Write your announcement..."
+                                                />
+                                            </div>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                This will send a notification to all {selectedGroup.memberCount} members of this group.
+                                            </p>
+                                        </div>
+                                        <div className="flex justify-end gap-3 mt-6">
+                                            <button
+                                                onClick={() => setShowAnnouncementModal(false)}
+                                                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={handleSendAnnouncement}
+                                                disabled={!announcement.title || !announcement.message}
+                                                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 flex items-center gap-2"
+                                            >
+                                                <Send className="h-4 w-4" />
+                                                Send Announcement
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Invite Modal */}
+                        {showInviteModal && selectedGroup && (
+                            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                                <div className="bg-white dark:bg-gray-800 rounded-xl w-full max-w-md">
+                                    <div className="p-6">
+                                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                            <Link className="h-6 w-6 text-primary-600" />
+                                            Invite to {selectedGroup.name}
+                                        </h2>
+                                        <div className="space-y-4">
+                                            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    Invite Link
+                                                </label>
+                                                <div className="flex items-center gap-2">
+                                                    <input
+                                                        type="text"
+                                                        readOnly
+                                                        value={`${typeof window !== 'undefined' ? window.location.origin : ''}/join/${inviteCode}`}
+                                                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm"
+                                                    />
+                                                    <button
+                                                        onClick={copyInviteLink}
+                                                        className={`px-3 py-2 rounded-lg flex items-center gap-1 ${copiedInvite ? 'bg-green-600 text-white' : 'bg-primary-600 text-white hover:bg-primary-700'}`}
+                                                    >
+                                                        {copiedInvite ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                                        {copiedInvite ? 'Copied!' : 'Copy'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                Share this link with people you want to invite to this group.
+                                            </p>
+                                        </div>
+                                        <div className="flex justify-end mt-6">
+                                            <button
+                                                onClick={() => setShowInviteModal(false)}
+                                                className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                                            >
+                                                Close
                                             </button>
                                         </div>
                                     </div>

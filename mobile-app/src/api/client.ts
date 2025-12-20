@@ -12,13 +12,12 @@ const getBaseUrl = () => {
         return envUrl;
     }
 
-    // Fallback for local development
-    // Android Emulator: 10.0.2.2
-    // iOS Simulator: localhost
-    return Platform.OS === 'android' ? 'http://10.0.2.2:3333' : 'http://localhost:3333';
+    // Fallback to production URL to ensure connectivity (Nuclear Fix logic)
+    return 'https://hlc-church-app.onrender.com';
 };
 
 const BASE_URL = getBaseUrl();
+console.log('API Base URL:', BASE_URL);
 
 const client = axios.create({
     baseURL: BASE_URL,

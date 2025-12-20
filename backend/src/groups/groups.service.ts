@@ -189,4 +189,135 @@ export class GroupsService {
             data: { role },
         });
     }
+
+    // ======== ENTERPRISE FEATURES ========
+
+    async getAnalytics(groupId: string) {
+        const group = await this.prisma.group.findUnique({
+            where: { id: groupId },
+            include: { members: true },
+        });
+
+        if (!group) {
+            throw new NotFoundException('Group not found');
+        }
+
+        // Get member join dates for growth analysis
+        const members = await this.prisma.groupMember.findMany({
+            where: { groupId },
+            orderBy: { joinedAt: 'asc' },
+        });
+
+        // Calculate monthly growth (last 6 months)
+        const now = new Date();
+        const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+        const monthlyGrowth: { month: string; count: number }[] = [];
+
+        for (let i = 0; i < 6; i++) {
+            const monthStart = new Date(sixMonthsAgo.getFullYear(), sixMonthsAgo.getMonth() + i, 1);
+            const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+            const count = members.filter(m => {
+                const joinDate = new Date(m.joinedAt);
+                return joinDate >= monthStart && joinDate <= monthEnd;
+            }).length;
+            monthlyGrowth.push({
+                month: monthStart.toLocaleString('default', { month: 'short', year: '2-digit' }),
+                count,
+            });
+        }
+
+        // Role distribution
+        const roleDistribution = members.reduce((acc, m) => {
+            acc[m.role] = (acc[m.role] || 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
+
+        return {
+            totalMembers: members.length,
+            monthlyGrowth,
+            roleDistribution,
+            createdAt: group.createdAt,
+            lastActivity: members.length > 0 ? members[members.length - 1].joinedAt : null,
+        };
+    }
+
+    async getActivity(groupId: string, limit = 20) {
+        const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+        if (!group) {
+            throw new NotFoundException('Group not found');
+        }
+
+        // Get recent member joins
+        const recentJoins = await this.prisma.groupMember.findMany({
+            where: { groupId },
+            orderBy: { joinedAt: 'desc' },
+            take: limit,
+        });
+
+        const memberIds = recentJoins.map(m => m.memberId);
+        const members = await this.prisma.member.findMany({
+            where: { id: { in: memberIds } },
+            select: { id: true, firstName: true, lastName: true },
+        });
+
+        const memberMap = new Map(members.map(m => [m.id, m]));
+
+        return recentJoins.map(join => ({
+            type: 'MEMBER_JOINED',
+            timestamp: join.joinedAt,
+            member: memberMap.get(join.memberId),
+            role: join.role,
+        }));
+    }
+
+    async generateInviteCode(groupId: string) {
+        const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+        if (!group) {
+            throw new NotFoundException('Group not found');
+        }
+
+        // Generate a simple invite code (in production, store this in DB with expiry)
+        const code = `${groupId.slice(0, 8)}-${Date.now().toString(36)}`;
+        return { inviteCode: code, groupId, groupName: group.name };
+    }
+
+    async sendAnnouncement(groupId: string, title: string, message: string) {
+        const group = await this.prisma.group.findUnique({
+            where: { id: groupId },
+            include: { members: true },
+        });
+
+        if (!group) {
+            throw new NotFoundException('Group not found');
+        }
+
+        // Get all member IDs
+        const memberIds = group.members.map(m => m.memberId);
+
+        // Get user IDs for these members
+        const members = await this.prisma.member.findMany({
+            where: { id: { in: memberIds } },
+            select: { userId: true },
+        });
+
+        const userIds = members.filter(m => m.userId).map(m => m.userId as string);
+
+        // Create notifications for all users
+        const notifications = userIds.map(userId => ({
+            userId,
+            title: `[${group.name}] ${title}`,
+            message,
+            type: 'GROUP_ANNOUNCEMENT',
+        }));
+
+        if (notifications.length > 0) {
+            await this.prisma.notification.createMany({ data: notifications });
+        }
+
+        return {
+            success: true,
+            recipientCount: notifications.length,
+            groupName: group.name,
+        };
+    }
 }

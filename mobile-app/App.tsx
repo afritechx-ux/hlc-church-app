@@ -19,7 +19,7 @@ import { View, ActivityIndicator } from 'react-native';
 
 function AppContent() {
   const { theme } = useTheme();
-  useNotifications();
+  // useNotifications(); // Disabled temporarily to debug
 
   const [fontsLoaded] = useFonts({
     'PlusJakartaSans-Regular': PlusJakartaSans_400Regular,

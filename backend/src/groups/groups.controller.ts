@@ -75,4 +75,34 @@ export class GroupsController {
     ) {
         return this.groupsService.updateMemberRole(id, memberId, role);
     }
+
+    // ======== ENTERPRISE ENDPOINTS ========
+
+    @Get(':id/analytics')
+    getAnalytics(@Param('id') id: string) {
+        return this.groupsService.getAnalytics(id);
+    }
+
+    @Get(':id/activity')
+    getActivity(@Param('id') id: string) {
+        return this.groupsService.getActivity(id);
+    }
+
+    @Post(':id/invite')
+    @UseGuards(RolesGuard)
+    @Roles('ADMIN', 'SUPER_ADMIN', 'PASTOR', 'LEADER')
+    generateInvite(@Param('id') id: string) {
+        return this.groupsService.generateInviteCode(id);
+    }
+
+    @Post(':id/announce')
+    @UseGuards(RolesGuard)
+    @Roles('ADMIN', 'SUPER_ADMIN', 'PASTOR')
+    sendAnnouncement(
+        @Param('id') id: string,
+        @Body('title') title: string,
+        @Body('message') message: string,
+    ) {
+        return this.groupsService.sendAnnouncement(id, title, message);
+    }
 }
