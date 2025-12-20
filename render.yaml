@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: hlc-church-app
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: NODE_VERSION
+        value: 20.10.0
