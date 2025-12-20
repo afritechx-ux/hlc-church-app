@@ -38,27 +38,36 @@ export default function LiveQR({ occurrenceId }: LiveQRProps) {
         };
 
         fetchToken();
-        intervalId = setInterval(fetchToken, 55000);
+
+        // Only auto-refresh when modal is NOT open to prevent screen shaking
+        if (!showShareModal) {
+            intervalId = setInterval(fetchToken, 55000);
+        }
 
         return () => clearInterval(intervalId);
-    }, [occurrenceId]);
+    }, [occurrenceId, showShareModal]);
 
-    const handleShareClick = () => {
+    const handleShareClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         setShowShareModal(true);
-        // Token is likely already fetched. If not, useEffect handles retries or we could refetch here if null.
     };
 
     const getQrUrl = (t: string) => {
         return `${typeof window !== 'undefined' ? window.location.origin : ''}/public/check-in/${occurrenceId}?token=${t}`;
     };
 
-    const handleCopyLink = () => {
+    const handleCopyLink = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (!staticToken) return;
         navigator.clipboard.writeText(getQrUrl(staticToken));
         toast.success('Link copied to clipboard');
     };
 
-    const handlePrint = () => {
+    const handlePrint = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (!staticToken) return;
 
         // Get the SVG from the rendered DOM
