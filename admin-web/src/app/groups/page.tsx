@@ -338,9 +338,9 @@ export default function GroupsPage() {
                             </div>
                             <button
                                 onClick={() => setShowCreateModal(true)}
-                                className="flex items-center gap-2 px-5 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors shadow-lg font-semibold"
+                                className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-xl font-bold text-lg"
                             >
-                                <Plus className="h-5 w-5" />
+                                <Plus className="h-6 w-6" />
                                 + Create New Group
                             </button>
                         </div>
