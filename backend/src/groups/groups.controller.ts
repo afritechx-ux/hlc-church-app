@@ -90,7 +90,7 @@ export class GroupsController {
 
     @Post(':id/invite')
     @UseGuards(RolesGuard)
-    @Roles('ADMIN', 'SUPER_ADMIN', 'PASTOR', 'LEADER')
+    @Roles('ADMIN', 'SUPER_ADMIN', 'PASTOR', 'DEPARTMENT_LEADER')
     generateInvite(@Param('id') id: string) {
         return this.groupsService.generateInviteCode(id);
     }
