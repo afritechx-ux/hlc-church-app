@@ -54,7 +54,8 @@ export default function LiveQR({ occurrenceId }: LiveQRProps) {
     };
 
     const getQrUrl = (t: string) => {
-        return `${typeof window !== 'undefined' ? window.location.origin : ''}/public/check-in/${occurrenceId}?token=${t}`;
+        // Use static HTML page that bypasses Next.js entirely
+        return `${typeof window !== 'undefined' ? window.location.origin : ''}/checkin.html?token=${t}&id=${occurrenceId}`;
     };
 
     const handleCopyLink = (e: React.MouseEvent) => {
