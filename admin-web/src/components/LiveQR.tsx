@@ -131,7 +131,11 @@ export default function LiveQR({ occurrenceId }: LiveQRProps) {
                         <Share2 className="w-5 h-5" />
                     </button>
                 </div>
-                <div className="rounded-xl border-4 border-gray-900 p-4 bg-white">
+                {/* Fixed-size container to prevent layout shift */}
+                <div
+                    className="rounded-xl border-4 border-gray-900 p-4 bg-white"
+                    style={{ width: 288, height: 288, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                >
                     {token && (
                         <QRCodeSVG
                             value={getQrUrl(token)}
@@ -168,7 +172,12 @@ export default function LiveQR({ occurrenceId }: LiveQRProps) {
                             This code is valid for 24 hours. Ideal for printing or sharing.
                         </p>
 
-                        <div id="static-qr-container" className="flex justify-center mb-6 p-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                        {/* Fixed-size container to prevent layout shift */}
+                        <div
+                            id="static-qr-container"
+                            className="flex justify-center items-center mb-6 p-4 bg-gray-50 rounded-xl border border-dashed border-gray-300"
+                            style={{ width: 232, height: 232, margin: '0 auto 24px auto' }}
+                        >
                             {staticToken ? (
                                 <QRCodeSVG
                                     value={getQrUrl(staticToken)}
@@ -176,7 +185,7 @@ export default function LiveQR({ occurrenceId }: LiveQRProps) {
                                     level="M"
                                 />
                             ) : (
-                                <div className="h-[200px] flex items-center justify-center text-gray-400">Loading...</div>
+                                <div className="flex items-center justify-center text-gray-400">Loading...</div>
                             )}
                         </div>
 
