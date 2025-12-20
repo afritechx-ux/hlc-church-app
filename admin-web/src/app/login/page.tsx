@@ -19,7 +19,12 @@ export default function LoginPage() {
             await login(data);
         } catch (err: any) {
             console.error('Login error:', err);
-            setError(err.response?.data?.message || 'Login failed');
+            // Check for network error (no response)
+            if (!err.response) {
+                setError(`Connection Error: ${err.message}. Check your internet or API URL.`);
+            } else {
+                setError(err.response?.data?.message || `Login failed (${err.response.status})`);
+            }
         }
     };
 
