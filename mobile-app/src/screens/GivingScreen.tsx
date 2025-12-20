@@ -130,16 +130,23 @@ export default function GivingScreen() {
             try {
                 const meRes = await client.get('/auth/me');
                 const userData = meRes.data;
-                console.log('User data:', userData);
+                console.log('User data received:', JSON.stringify(userData, null, 2));
 
                 if (userData.member) {
                     const id = userData.member.id;
+                    console.log('Member ID found:', id);
                     setMemberId(id);
+
+                    console.log('Fetching donations for member:', id);
                     const res = await client.get(`/giving/donations/member/${id}`);
+                    console.log('Donations received:', res.data?.length || 0, 'records');
                     setDonations(res.data || []);
 
                     const total = (res.data || []).reduce((sum: number, d: Donation) => sum + Number(d.amount), 0);
                     setTotalGiving(total);
+                } else {
+                    console.warn('WARNING: User has no member profile linked!');
+                    console.log('User object:', userData);
                 }
             } catch (userError) {
                 console.log('User data error (non-critical):', userError);
@@ -162,17 +169,31 @@ export default function GivingScreen() {
             return;
         }
 
+        // Check if member profile exists
+        if (!memberId) {
+            Alert.alert(
+                'Profile Required',
+                'Your account is not linked to a member profile. Please contact the church admin to link your account.',
+                [{ text: 'OK' }]
+            );
+            return;
+        }
+
         const selectedConfig = paymentConfigs.find(c => c.id === paymentMethod);
         const methodToSend = selectedConfig ? selectedConfig.type : 'OTHER';
 
         setSubmitting(true);
+
+        const donationData = {
+            amount: parseFloat(amount),
+            fundId: selectedFund.id,
+            memberId: memberId,
+            method: methodToSend,
+        };
+        console.log('Submitting donation:', donationData);
+
         try {
-            await client.post('/giving/donations', {
-                amount: parseFloat(amount),
-                fundId: selectedFund.id,
-                memberId: memberId,
-                method: methodToSend,
-            });
+            await client.post('/giving/donations', donationData);
 
             Alert.alert('🎉 Thank You!', 'Your donation has been received. God bless you!');
             setShowDonationModal(false);
