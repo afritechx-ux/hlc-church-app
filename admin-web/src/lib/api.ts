@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333',
+    baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://hlc-church-app.onrender.com',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -36,7 +36,7 @@ api.interceptors.response.use(
                 if (!refreshToken) throw new Error('No refresh token');
 
                 const { data } = await axios.post(
-                    `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'}/auth/refresh`,
+                    `${process.env.NEXT_PUBLIC_API_URL || 'https://hlc-church-app.onrender.com'}/auth/refresh`,
                     {},
                     {
                         headers: {
