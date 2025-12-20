@@ -134,7 +134,15 @@ export default function GroupsPage() {
     const handleCreateGroup = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await api.post('/groups', formData);
+            const payload = {
+                ...formData,
+                leaderId: formData.leaderId || undefined,
+                description: formData.description || undefined,
+                meetingDay: formData.meetingDay || undefined,
+                meetingTime: formData.meetingTime || undefined,
+                location: formData.location || undefined,
+            };
+            await api.post('/groups', payload);
             setShowCreateModal(false);
             resetForm();
             fetchGroups();
@@ -148,7 +156,15 @@ export default function GroupsPage() {
         e.preventDefault();
         if (!selectedGroup) return;
         try {
-            await api.patch(`/groups/${selectedGroup.id}`, formData);
+            const payload = {
+                ...formData,
+                leaderId: formData.leaderId || undefined,
+                description: formData.description || undefined,
+                meetingDay: formData.meetingDay || undefined,
+                meetingTime: formData.meetingTime || undefined,
+                location: formData.location || undefined,
+            };
+            await api.patch(`/groups/${selectedGroup.id}`, payload);
             setShowEditModal(false);
             resetForm();
             fetchGroups();
