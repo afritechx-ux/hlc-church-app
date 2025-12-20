@@ -286,6 +286,12 @@ export default function GroupsScreen({ navigation }: any) {
                                                 </Text>
                                             </View>
                                         )}
+                                        <View style={styles.metaItem}>
+                                            <Users size={14} color={colors.textMuted} />
+                                            <Text style={[styles.metaText, { color: colors.textMuted }]}>
+                                                {group.members?.length || 0} member{(group.members?.length || 0) !== 1 ? 's' : ''}
+                                            </Text>
+                                        </View>
                                     </View>
 
                                     <View style={styles.groupActions}>
