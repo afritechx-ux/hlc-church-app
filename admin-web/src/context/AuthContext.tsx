@@ -31,6 +31,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const initAuth = async () => {
+            // Bypass auth check for public routes
+            if (pathname?.startsWith('/public')) {
+                setIsLoading(false);
+                return;
+            }
+
             const token = localStorage.getItem('accessToken');
             if (!token) {
                 setIsLoading(false);
