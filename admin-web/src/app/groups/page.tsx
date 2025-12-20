@@ -608,9 +608,9 @@ export default function GroupsPage() {
                                                 </button>
                                                 <button
                                                     type="submit"
-                                                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                                                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-bold text-lg shadow-lg"
                                                 >
-                                                    {showEditModal ? 'Save Changes' : 'Create Group'}
+                                                    {showEditModal ? '✓ Save Changes' : '✓ Create Group'}
                                                 </button>
                                             </div>
                                         </form>
