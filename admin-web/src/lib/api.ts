@@ -19,6 +19,16 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+
+        // Log detailed error info for debugging
+        console.error('API Error:', {
+            url: originalRequest?.url,
+            method: originalRequest?.method,
+            status: error.response?.status,
+            data: error.response?.data,
+            message: error.message
+        });
+
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
             try {
@@ -41,9 +51,11 @@ api.interceptors.response.use(
                 originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
                 return api(originalRequest);
             } catch (refreshError) {
+                console.error('Refresh token failed:', refreshError);
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
-                window.location.href = '/login';
+                // Only redirect if we are sure it's an auth failure and not just a backend glitch
+                // window.location.href = '/login'; 
                 return Promise.reject(refreshError);
             }
         }
