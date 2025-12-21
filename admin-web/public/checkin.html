@@ -1,14 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Service Check-in | Higher Life Chapel</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f7;
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -16,155 +22,357 @@
             justify-content: center;
             padding: 20px;
         }
+
         .container {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            max-width: 400px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 420px;
             width: 100%;
             overflow: hidden;
         }
+
         .header {
-            background: #2563eb;
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 100%);
             color: white;
-            padding: 24px;
+            padding: 28px 24px;
             text-align: center;
         }
-        .header h1 { font-size: 20px; font-weight: 600; }
-        .header p { font-size: 14px; opacity: 0.9; margin-top: 4px; }
-        .form { padding: 24px; }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 215, 0, 0.15);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .form {
+            padding: 24px;
+        }
+
         .tabs {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
             padding: 4px;
             background: #f3f4f6;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            border-radius: 14px;
+            margin-bottom: 24px;
         }
+
         .tab {
-            padding: 10px;
+            padding: 12px;
             border: none;
             background: transparent;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 14px;
             color: #6b7280;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
         }
+
         .tab.active {
             background: white;
-            color: #111;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #0F2027;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
-        .field { margin-bottom: 16px; }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
         .field label {
             display: block;
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             color: #374151;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
-        .field input, .field textarea {
+
+        .field input,
+        .field textarea,
+        .field select {
             width: 100%;
             padding: 14px 16px;
-            border: none;
+            border: 2px solid #e5e7eb;
             background: #f9fafb;
             border-radius: 12px;
             font-size: 16px;
             outline: none;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
-        .field input:focus, .field textarea:focus {
+
+        .field input:focus,
+        .field textarea:focus,
+        .field select:focus {
             background: white;
-            box-shadow: 0 0 0 3px rgba(37,99,235,0.2);
+            border-color: #FFD700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
         }
-        .field textarea { resize: none; height: 80px; }
+
+        .field textarea {
+            resize: none;
+            height: 90px;
+        }
+
+        .field-hint {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 6px;
+        }
+
+        .required-badge {
+            background: #fef3c7;
+            color: #d97706;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+
         .submit {
             width: 100%;
             padding: 16px;
-            background: #2563eb;
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 100%);
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 14px rgba(15, 32, 39, 0.3);
         }
-        .submit:hover { background: #1d4ed8; }
-        .submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(15, 32, 39, 0.4);
+        }
+
+        .submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .submit:active {
+            transform: translateY(0);
+        }
+
         .footer {
             text-align: center;
-            padding: 16px;
-            color: #9ca3af;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.7);
             font-size: 13px;
         }
-        .success, .error {
+
+        .success,
+        .error {
             text-align: center;
-            padding: 40px 24px;
+            padding: 50px 24px;
         }
-        .success h2 { color: #059669; margin-bottom: 8px; }
-        .error h2 { color: #dc2626; margin-bottom: 8px; }
+
+        .success h2 {
+            color: #059669;
+            margin-bottom: 12px;
+            font-size: 24px;
+        }
+
+        .error h2 {
+            color: #dc2626;
+            margin-bottom: 12px;
+            font-size: 24px;
+        }
+
+        .success p,
+        .error p {
+            color: #6b7280;
+            font-size: 15px;
+        }
+
         .icon {
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 16px;
-            font-size: 32px;
+            margin: 0 auto 20px;
+            font-size: 40px;
         }
-        .success .icon { background: #d1fae5; }
-        .error .icon { background: #fee2e2; }
-        .hidden { display: none !important; }
+
+        .success .icon {
+            background: #d1fae5;
+        }
+
+        .error .icon {
+            background: #fee2e2;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
         .retry {
-            margin-top: 20px;
-            padding: 12px 24px;
+            margin-top: 24px;
+            padding: 14px 28px;
             background: #374151;
             color: white;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .retry:hover {
+            background: #4b5563;
+        }
+
+        .info-card {
+            background: #fef3c7;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .info-card p {
+            font-size: 13px;
+            color: #92400e;
+            line-height: 1.5;
+        }
+
+        .info-card strong {
+            color: #78350f;
+        }
+
+        .app-download {
+            background: linear-gradient(135deg, #0F2027 0%, #203A43 100%);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 24px;
+            text-align: center;
+            color: white;
+        }
+
+        .app-download p {
+            font-size: 13px;
+            margin-bottom: 12px;
+            opacity: 0.9;
+        }
+
+        .app-download a {
+            display: inline-block;
+            background: #FFD700;
+            color: #0F2027;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .app-download a:hover {
+            background: #FFC700;
+            transform: translateY(-1px);
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="header">
+            <div class="logo">⛪</div>
             <h1>Service Check-in</h1>
-            <p>Please fill in your details</p>
+            <p id="headerSubtitle">Welcome! Please fill in your details</p>
         </div>
 
         <!-- Form View -->
         <div id="formView" class="form">
             <div class="tabs">
-                <button class="tab active" onclick="setCategory('MEMBER')">Member</button>
-                <button class="tab" onclick="setCategory('VISITOR')">Visitor</button>
+                <button class="tab" id="tabMember" onclick="setCategory('MEMBER')">I'm a Member</button>
+                <button class="tab active" id="tabVisitor" onclick="setCategory('VISITOR')">I'm a Visitor</button>
             </div>
+
+            <!-- Info Card for Members -->
+            <div id="memberInfoCard" class="info-card hidden">
+                <p><strong>Using your phone camera?</strong> For faster check-in next time, download our mobile app! If
+                    you're a member checking in manually, please tell us why below.</p>
+            </div>
+
             <form id="checkinForm" onsubmit="handleSubmit(event)">
                 <div class="field">
                     <label>Full Name</label>
-                    <input type="text" id="name" placeholder="John Doe" required>
+                    <input type="text" id="name" placeholder="Enter your full name" required>
                 </div>
                 <div class="field">
                     <label>Phone Number</label>
-                    <input type="tel" id="phone" placeholder="024..." required>
+                    <input type="tel" id="phone" placeholder="e.g., 024 XXX XXXX" required>
+                    <p class="field-hint">We use this to identify your membership</p>
                 </div>
-                <div class="field" id="notesField">
-                    <label id="notesLabel">Notes (Optional)</label>
-                    <textarea id="notes" placeholder="Any additional info..."></textarea>
+
+                <!-- Visitor: Reason for Visit -->
+                <div class="field" id="visitorNotesField">
+                    <label>How did you hear about us? <span class="required-badge">Optional</span></label>
+                    <textarea id="visitorNotes"
+                        placeholder="e.g., I was invited by a friend, found you online..."></textarea>
                 </div>
+
+                <!-- Member: Reason for Not Using App -->
+                <div class="field hidden" id="memberNotesField">
+                    <label>Why aren't you using the mobile app? <span class="required-badge">Required</span></label>
+                    <select id="appReason" required>
+                        <option value="">Select a reason...</option>
+                        <option value="phone_issue">My phone has issues</option>
+                        <option value="no_app">Haven't downloaded the app yet</option>
+                        <option value="login_issue">Can't login to the app</option>
+                        <option value="forgot_phone">Forgot my phone today</option>
+                        <option value="battery_dead">Phone battery is dead</option>
+                        <option value="other">Other reason</option>
+                    </select>
+                    <textarea id="memberNotes" placeholder="Additional details (optional)..."
+                        style="margin-top: 12px;"></textarea>
+                </div>
+
                 <button type="submit" class="submit" id="submitBtn">Check In</button>
             </form>
+
+            <!-- App Download CTA -->
+            <div class="app-download" id="appDownloadCTA">
+                <p>📱 Check in faster with our mobile app!</p>
+                <a href="#" onclick="alert('App download link coming soon!')">Download App</a>
+            </div>
         </div>
 
         <!-- Success View -->
         <div id="successView" class="success hidden">
             <div class="icon">✓</div>
             <h2>You're Checked In!</h2>
-            <p>Thank you for joining us today.</p>
+            <p id="successMessage">Thank you for joining us today. God bless!</p>
+            <div class="app-download" style="margin-top: 30px;">
+                <p>Download our app for faster check-in next time!</p>
+                <a href="#" onclick="alert('App download link coming soon!')">Get the App</a>
+            </div>
         </div>
 
         <!-- Error View -->
@@ -178,24 +386,37 @@
     <p class="footer">Higher Life Chapel • HLC</p>
 
     <script>
-        let category = 'MEMBER';
+        let category = 'VISITOR'; // Default to visitor for phone camera scans
         const API_URL = 'https://hlc-church-app.onrender.com';
 
         // Get URL params
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
-        const serviceId = window.location.pathname.split('/').filter(Boolean).pop();
+
+        // Initialize with visitor selected
+        setCategory('VISITOR');
 
         function setCategory(cat) {
             category = cat;
-            document.querySelectorAll('.tab').forEach((t, i) => {
-                t.classList.toggle('active', (i === 0 && cat === 'MEMBER') || (i === 1 && cat === 'VISITOR'));
-            });
-            // Update notes label
-            document.getElementById('notesLabel').textContent = 
-                cat === 'VISITOR' ? 'Reason for visit (Optional)' : 'Notes (Optional)';
-            document.getElementById('notes').placeholder = 
-                cat === 'VISITOR' ? 'I was invited by...' : "My app isn't working...";
+
+            // Update tabs
+            document.getElementById('tabMember').classList.toggle('active', cat === 'MEMBER');
+            document.getElementById('tabVisitor').classList.toggle('active', cat === 'VISITOR');
+
+            // Show/hide relevant fields
+            document.getElementById('visitorNotesField').classList.toggle('hidden', cat === 'MEMBER');
+            document.getElementById('memberNotesField').classList.toggle('hidden', cat === 'VISITOR');
+            document.getElementById('memberInfoCard').classList.toggle('hidden', cat === 'VISITOR');
+
+            // Update required attribute
+            document.getElementById('visitorNotes').required = false;
+            document.getElementById('appReason').required = (cat === 'MEMBER');
+
+            // Update header subtitle
+            document.getElementById('headerSubtitle').textContent =
+                cat === 'VISITOR'
+                    ? 'Welcome! We\'re glad you\'re here'
+                    : 'Welcome back! Please check in below';
         }
 
         function showForm() {
@@ -204,10 +425,14 @@
             document.getElementById('errorView').classList.add('hidden');
         }
 
-        function showSuccess() {
+        function showSuccess(isVisitor) {
             document.getElementById('formView').classList.add('hidden');
             document.getElementById('successView').classList.remove('hidden');
             document.getElementById('errorView').classList.add('hidden');
+
+            document.getElementById('successMessage').textContent = isVisitor
+                ? 'Thank you for visiting us today. We hope you enjoy the service!'
+                : 'Thank you for checking in. See you next time with the app! 😊';
         }
 
         function showError(msg) {
@@ -224,26 +449,49 @@
             btn.textContent = 'Checking in...';
 
             try {
-                if (!token) throw new Error('Invalid QR Code (Missing Token)');
+                if (!token) throw new Error('Invalid QR Code (Missing Token). Please scan again.');
+
+                const name = document.getElementById('name').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+
+                let notes = '';
+                if (category === 'VISITOR') {
+                    notes = document.getElementById('visitorNotes').value.trim();
+                } else {
+                    const reason = document.getElementById('appReason').value;
+                    const additionalNotes = document.getElementById('memberNotes').value.trim();
+                    const reasonLabels = {
+                        'phone_issue': 'Phone has issues',
+                        'no_app': 'Haven\'t downloaded app',
+                        'login_issue': 'Can\'t login to app',
+                        'forgot_phone': 'Forgot phone',
+                        'battery_dead': 'Phone battery dead',
+                        'other': 'Other'
+                    };
+                    notes = `[App not used: ${reasonLabels[reason] || reason}]`;
+                    if (additionalNotes) {
+                        notes += ` ${additionalNotes}`;
+                    }
+                }
 
                 const response = await fetch(`${API_URL}/attendance/public-check-in`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         token: token,
-                        name: document.getElementById('name').value,
-                        phone: document.getElementById('phone').value,
+                        name: name,
+                        phone: phone,
                         category: category,
-                        notes: document.getElementById('notes').value
+                        notes: notes
                     })
                 });
 
                 if (!response.ok) {
                     const data = await response.json().catch(() => ({}));
-                    throw new Error(data.message || 'Check-in failed');
+                    throw new Error(data.message || 'Check-in failed. Please try again.');
                 }
 
-                showSuccess();
+                showSuccess(category === 'VISITOR');
             } catch (err) {
                 showError(err.message);
             } finally {
@@ -254,8 +502,10 @@
 
         // Show warning if no token
         if (!token) {
-            document.querySelector('.header p').textContent = '⚠️ Invalid QR Link (No Token)';
+            document.getElementById('headerSubtitle').textContent = '⚠️ Invalid QR Code - Please scan again';
+            document.getElementById('headerSubtitle').style.color = '#fbbf24';
         }
     </script>
 </body>
+
 </html>

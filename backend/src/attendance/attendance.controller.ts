@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { GetCurrentUserId } from '../common/decorators/get-current-user-id.decorator';
+import { Public } from '../common/decorators';
 import { AttendanceService } from './attendance.service';
 import { CheckInDto } from './dto/check-in.dto';
 import { QrCheckInDto } from './dto/qr-check-in.dto';
@@ -21,6 +22,7 @@ export class AttendanceController {
         return this.attendanceService.qrCheckIn(userId, qrCheckInDto.token);
     }
 
+    @Public()
     @Post('public-check-in')
     publicCheckIn(@Body() data: any) {
         return this.attendanceService.publicCheckIn(data);

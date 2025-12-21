@@ -2,7 +2,7 @@ import React from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useSafeAreaInsets } from 'react-native-safe-area-context'; // Added import
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import LoginScreen from '../screens/LoginScreen';
@@ -20,7 +20,8 @@ import ChatScreen from '../screens/ChatScreen';
 import DirectMessagesScreen from '../screens/DirectMessagesScreen';
 import DirectChatScreen from '../screens/DirectChatScreen';
 import GroupChatScreen from '../screens/GroupChatScreen';
-import { Home, History, User, DollarSign } from 'lucide-react-native';
+import InboxScreen from '../screens/InboxScreen';
+import { Home, History, User, DollarSign, Mail } from 'lucide-react-native';
 import { ActivityIndicator, View, Platform } from 'react-native';
 
 const Stack = createNativeStackNavigator();
@@ -70,6 +71,21 @@ function AppTabs() {
                             borderRadius: 12,
                         }}>
                             <Home color={color} size={size} strokeWidth={focused ? 2.5 : 2} />
+                        </View>
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="Inbox"
+                component={InboxScreen}
+                options={{
+                    tabBarIcon: ({ color, size, focused }) => (
+                        <View style={{
+                            backgroundColor: focused ? 'rgba(255, 215, 0, 0.15)' : 'transparent',
+                            padding: 8,
+                            borderRadius: 12,
+                        }}>
+                            <Mail color={color} size={size} strokeWidth={focused ? 2.5 : 2} />
                         </View>
                     ),
                 }}
