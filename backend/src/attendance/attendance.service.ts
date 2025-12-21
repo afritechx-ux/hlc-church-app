@@ -262,4 +262,49 @@ export class AttendanceService {
             throw new UnauthorizedException('Invalid QR token');
         }
     }
+
+    async linkToMember(attendanceId: string, memberId: string) {
+        // Verify the attendance record exists
+        const record = await this.prisma.attendanceRecord.findUnique({
+            where: { id: attendanceId },
+        });
+
+        if (!record) {
+            throw new BadRequestException('Attendance record not found');
+        }
+
+        // Verify the member exists
+        const member = await this.prisma.member.findUnique({
+            where: { id: memberId },
+        });
+
+        if (!member) {
+            throw new BadRequestException('Member not found');
+        }
+
+        // Check if this member already has an attendance record for this service
+        const existing = await this.prisma.attendanceRecord.findUnique({
+            where: {
+                memberId_serviceOccurrenceId: {
+                    memberId,
+                    serviceOccurrenceId: record.serviceOccurrenceId,
+                },
+            },
+        });
+
+        if (existing && existing.id !== attendanceId) {
+            throw new BadRequestException('This member is already checked in to this service');
+        }
+
+        // Update the attendance record to link it to the member
+        return this.prisma.attendanceRecord.update({
+            where: { id: attendanceId },
+            data: {
+                memberId,
+                // Keep visitor info but clear the "not found" note
+                notes: record.notes?.replace('[Claimed Member not found]', '[Linked by admin]') || '[Linked by admin]',
+            },
+            include: { member: true },
+        });
+    }
 }

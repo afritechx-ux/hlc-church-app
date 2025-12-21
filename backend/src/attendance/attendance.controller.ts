@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { GetCurrentUserId } from '../common/decorators/get-current-user-id.decorator';
 import { Public } from '../common/decorators';
 import { AttendanceService } from './attendance.service';
@@ -26,6 +26,14 @@ export class AttendanceController {
     @Post('public-check-in')
     publicCheckIn(@Body() data: any) {
         return this.attendanceService.publicCheckIn(data);
+    }
+
+    @Patch(':id/link')
+    linkToMember(
+        @Param('id') id: string,
+        @Body() data: { memberId: string },
+    ) {
+        return this.attendanceService.linkToMember(id, data.memberId);
     }
 
     @Get('qr-token/:occurrenceId')
