@@ -34,7 +34,11 @@ interface AttendanceRecord {
         firstName: string;
         lastName: string;
         email: string;
-    };
+    } | null;
+    visitorName?: string;
+    visitorPhone?: string;
+    category?: string;
+    notes?: string;
     checkInTime: string;
     method: string;
 }
@@ -132,10 +136,17 @@ export default function ServiceDetailPage() {
         if (!service) return;
         try {
             const csvContent = [
-                'Name,Email,Check-in Time,Method',
-                ...attendance.map(r =>
-                    `"${r.member.firstName} ${r.member.lastName}","${r.member.email}","${new Date(r.checkInTime).toLocaleString()}","${r.method}"`
-                )
+                'Name,Email/Phone,Check-in Time,Method,Type',
+                ...attendance.map(r => {
+                    const name = r.member
+                        ? `${r.member.firstName} ${r.member.lastName}`
+                        : (r.visitorName || 'Unknown');
+                    const contact = r.member
+                        ? r.member.email
+                        : (r.visitorPhone || '');
+                    const type = r.member ? 'Member' : (r.category || 'Visitor');
+                    return `"${name}","${contact}","${new Date(r.checkInTime).toLocaleString()}","${r.method}","${type}"`;
+                })
             ].join('\n');
 
             const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -154,7 +165,7 @@ export default function ServiceDetailPage() {
 
     // Members not yet checked in
     const availableMembers = members.filter(m =>
-        !attendance.some(a => a.member.id === m.id) &&
+        !attendance.some(a => a.member?.id === m.id) &&
         (searchTerm === '' ||
             `${m.firstName} ${m.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
             m.email.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -385,44 +396,68 @@ export default function ServiceDetailPage() {
                                         </div>
                                     ) : (
                                         <div className="divide-y" style={{ borderColor: 'var(--border)' }}>
-                                            {attendance.map((record, i) => (
-                                                <motion.div
-                                                    key={record.id}
-                                                    initial={{ opacity: 0, x: -20 }}
-                                                    animate={{ opacity: 1, x: 0 }}
-                                                    transition={{ delay: i * 0.03 }}
-                                                    className="p-4 flex items-center justify-between"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div
-                                                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
-                                                            style={{ background: 'linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%)' }}
-                                                        >
-                                                            {record.member.firstName[0]}
+                                            {attendance.map((record, i) => {
+                                                const displayName = record.member
+                                                    ? `${record.member.firstName} ${record.member.lastName}`
+                                                    : (record.visitorName || 'Unknown');
+                                                const displayInitial = record.member
+                                                    ? record.member.firstName[0]
+                                                    : (record.visitorName?.[0] || '?');
+                                                const displayContact = record.member
+                                                    ? record.member.email
+                                                    : (record.visitorPhone || '');
+                                                const isVisitor = !record.member;
+
+                                                return (
+                                                    <motion.div
+                                                        key={record.id}
+                                                        initial={{ opacity: 0, x: -20 }}
+                                                        animate={{ opacity: 1, x: 0 }}
+                                                        transition={{ delay: i * 0.03 }}
+                                                        className="p-4 flex items-center justify-between"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div
+                                                                className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold"
+                                                                style={{
+                                                                    background: isVisitor
+                                                                        ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                                                                        : 'linear-gradient(135deg, var(--primary) 0%, #4f46e5 100%)'
+                                                                }}
+                                                            >
+                                                                {displayInitial}
+                                                            </div>
+                                                            <div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <p className="font-medium" style={{ color: 'var(--foreground)' }}>
+                                                                        {displayName}
+                                                                    </p>
+                                                                    {isVisitor && (
+                                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                                                            {record.category || 'Visitor'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                                                                    {displayContact}
+                                                                </p>
+                                                            </div>
                                                         </div>
-                                                        <div>
-                                                            <p className="font-medium" style={{ color: 'var(--foreground)' }}>
-                                                                {record.member.firstName} {record.member.lastName}
-                                                            </p>
-                                                            <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
-                                                                {record.member.email}
+                                                        <div className="text-right">
+                                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${record.method === 'QR'
+                                                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
+                                                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                                }`}>
+                                                                {record.method === 'QR' ? <QrCode className="w-3 h-3" /> : <Keyboard className="w-3 h-3" />}
+                                                                {record.method}
+                                                            </span>
+                                                            <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                                                                {new Date(record.checkInTime).toLocaleTimeString()}
                                                             </p>
                                                         </div>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${record.method === 'QR'
-                                                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400'
-                                                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                            }`}>
-                                                            {record.method === 'QR' ? <QrCode className="w-3 h-3" /> : <Keyboard className="w-3 h-3" />}
-                                                            {record.method}
-                                                        </span>
-                                                        <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
-                                                            {new Date(record.checkInTime).toLocaleTimeString()}
-                                                        </p>
-                                                    </div>
-                                                </motion.div>
-                                            ))}
+                                                    </motion.div>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>
