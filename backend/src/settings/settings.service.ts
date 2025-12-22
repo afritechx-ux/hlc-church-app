@@ -33,6 +33,12 @@ export class SettingsService {
         supportEmail?: string;
         timezone?: string;
         currency?: string;
+        smtpHost?: string;
+        smtpPort?: number;
+        smtpUser?: string;
+        smtpPass?: string;
+        smsApiKey?: string;
+        smsSenderId?: string;
     }) {
         // Get or create settings first
         let settings = await this.prisma.organizationSettings.findFirst();
@@ -51,6 +57,12 @@ export class SettingsService {
                     supportEmail: data.supportEmail,
                     timezone: data.timezone || 'Africa/Accra',
                     currency: data.currency || 'GHS',
+                    smtpHost: data.smtpHost,
+                    smtpPort: data.smtpPort,
+                    smtpUser: data.smtpUser,
+                    smtpPass: data.smtpPass,
+                    smsApiKey: data.smsApiKey,
+                    smsSenderId: data.smsSenderId,
                 },
             });
         }

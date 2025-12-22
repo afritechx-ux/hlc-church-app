@@ -4,6 +4,9 @@ import { CreateMessageDto, CreateTemplateDto, UpdateTemplateDto } from './dto/me
 import { MessageStatus } from '@prisma/client';
 import { NotificationsService } from '../notifications/notifications.service';
 
+import { EmailService } from './email.service';
+import { SmsService } from './sms.service';
+
 @Injectable()
 export class MessagingService {
     private readonly logger = new Logger(MessagingService.name);
@@ -11,6 +14,8 @@ export class MessagingService {
     constructor(
         private prisma: PrismaService,
         private notificationsService: NotificationsService,
+        private emailService: EmailService,
+        private smsService: SmsService,
     ) { }
 
     // ============ MESSAGES ============
@@ -96,6 +101,12 @@ export class MessagingService {
                         message: personalizedBody,
                         type: 'info',
                     });
+                } else if (dto.channel === 'EMAIL' && member?.email) {
+                    const sent = await this.emailService.sendEmail(member.email, dto.subject, personalizedBody);
+                    if (!sent) throw new Error('Failed to send email');
+                } else if (dto.channel === 'SMS' && member?.phone) {
+                    const sent = await this.smsService.sendSms(member.phone, personalizedBody);
+                    if (!sent) throw new Error('Failed to send SMS');
                 }
 
                 // Mark as sent

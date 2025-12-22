@@ -597,6 +597,14 @@ model OrganizationSettings {
   adminEmail      String?
   supportEmail    String?
   
+  // Messaging Configuration
+  smtpHost        String?
+  smtpPort        Int?     @default(587)
+  smtpUser        String?
+  smtpPass        String?
+  smsApiKey       String?
+  smsSenderId     String?  @default("HLAG Church")
+  
   // Regional
   timezone        String   @default("Africa/Accra")
   currency        String   @default("GHS")

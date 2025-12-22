@@ -32,6 +32,12 @@ export class SettingsController {
         supportEmail?: string;
         timezone?: string;
         currency?: string;
+        smtpHost?: string;
+        smtpPort?: number;
+        smtpUser?: string;
+        smtpPass?: string;
+        smsApiKey?: string;
+        smsSenderId?: string;
     }) {
         return this.settingsService.updateSettings(data);
     }
