@@ -75,7 +75,10 @@ export default function SettingsPage() {
         name: 'Higher Life Chapel',
         address: 'Main Campus, Accra',
         phone: '+233 XX XXX XXXX',
+        pastorPhone: '+233 XX XXX XXXX',
+        prayerLine: '+233 XX XXX XXXX',
         email: 'admin@higherlifechapel.org',
+        supportEmail: 'support@higherlifechapel.org',
         website: 'www.higherlifechapel.org',
         timezone: 'Africa/Accra',
         currency: 'GHS',
@@ -346,6 +349,59 @@ export default function SettingsPage() {
                                                     onChange={(e) => setOrgSettings({ ...orgSettings, address: e.target.value })}
                                                 />
                                             </div>
+                                        </div>
+
+                                        {/* Contact Phone Numbers Section */}
+                                        <div className="pt-6 border-t" style={{ borderColor: 'var(--border)' }}>
+                                            <h4 className="text-base font-semibold mb-4 flex items-center gap-2" style={{ color: 'var(--foreground)' }}>
+                                                <Smartphone className="w-4 h-4" />
+                                                Contact Phone Numbers (for Mobile App)
+                                            </h4>
+                                            <p className="text-sm mb-4" style={{ color: 'var(--foreground-muted)' }}>
+                                                These phone numbers will be displayed in the mobile app for members to call.
+                                            </p>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                                                        🏢 Church Office
+                                                    </label>
+                                                    <input
+                                                        type="tel"
+                                                        className="input-modern w-full"
+                                                        placeholder="+233 XX XXX XXXX"
+                                                        value={orgSettings.phone}
+                                                        onChange={(e) => setOrgSettings({ ...orgSettings, phone: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                                                        👨‍💼 Pastor's Line
+                                                    </label>
+                                                    <input
+                                                        type="tel"
+                                                        className="input-modern w-full"
+                                                        placeholder="+233 XX XXX XXXX"
+                                                        value={orgSettings.pastorPhone}
+                                                        onChange={(e) => setOrgSettings({ ...orgSettings, pastorPhone: e.target.value })}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                                                        🙏 Emergency Prayer Line
+                                                    </label>
+                                                    <input
+                                                        type="tel"
+                                                        className="input-modern w-full"
+                                                        placeholder="+233 XX XXX XXXX"
+                                                        value={orgSettings.prayerLine}
+                                                        onChange={(e) => setOrgSettings({ ...orgSettings, prayerLine: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Regional Settings */}
+                                        <div className="pt-6 border-t grid grid-cols-1 md:grid-cols-2 gap-6" style={{ borderColor: 'var(--border)' }}>
                                             <div>
                                                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
                                                     Timezone
