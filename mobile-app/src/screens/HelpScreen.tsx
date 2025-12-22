@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -23,21 +23,40 @@ import {
     Video,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import client from '../api/client';
 
 export default function HelpScreen({ navigation }: any) {
     const { theme } = useTheme();
     const colors = theme.colors;
 
-    // Church contact numbers - can be configured
-    const CHURCH_CONTACTS = {
+    // Church contact numbers - fetched from backend
+    const [contacts, setContacts] = useState({
         office: '+233244000000',
         pastor: '+233244000001',
         prayerLine: '+233244000002',
         email: 'support@higherlifechapel.org',
-    };
+    });
+
+    // Fetch contact info from backend
+    useEffect(() => {
+        const fetchContacts = async () => {
+            try {
+                const { data } = await client.get('/settings/contact');
+                setContacts({
+                    office: data.officePhone || '+233244000000',
+                    pastor: data.pastorPhone || '+233244000001',
+                    prayerLine: data.prayerLinePhone || '+233244000002',
+                    email: data.supportEmail || 'support@higherlifechapel.org',
+                });
+            } catch (error) {
+                console.log('Using default contacts');
+            }
+        };
+        fetchContacts();
+    }, []);
 
     const handleEmail = () => {
-        Linking.openURL(`mailto:${CHURCH_CONTACTS.email}?subject=App Support Request`);
+        Linking.openURL(`mailto:${contacts.email}?subject=App Support Request`);
     };
 
     const handlePhone = () => {
@@ -47,15 +66,15 @@ export default function HelpScreen({ navigation }: any) {
             [
                 {
                     text: '🏢 Church Office',
-                    onPress: () => Linking.openURL(`tel:${CHURCH_CONTACTS.office}`)
+                    onPress: () => Linking.openURL(`tel:${contacts.office}`)
                 },
                 {
                     text: '👨‍💼 Pastor\'s Line',
-                    onPress: () => Linking.openURL(`tel:${CHURCH_CONTACTS.pastor}`)
+                    onPress: () => Linking.openURL(`tel:${contacts.pastor}`)
                 },
                 {
                     text: '🙏 Emergency Prayer',
-                    onPress: () => Linking.openURL(`tel:${CHURCH_CONTACTS.prayerLine}`)
+                    onPress: () => Linking.openURL(`tel:${contacts.prayerLine}`)
                 },
                 { text: 'Cancel', style: 'cancel' },
             ]

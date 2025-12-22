@@ -578,3 +578,29 @@ model GroupChatReadReceipt {
   @@index([messageId])
   @@index([userId])
 }
+
+// Organization Settings - stores global config including contact phone numbers
+model OrganizationSettings {
+  id              String   @id @default(uuid())
+  
+  // Basic Info
+  name            String   @default("Higher Life Chapel")
+  address         String?
+  website         String?
+  
+  // Contact Numbers (for mobile app)
+  officePhone     String?
+  pastorPhone     String?
+  prayerLinePhone String?
+  
+  // Emails
+  adminEmail      String?
+  supportEmail    String?
+  
+  // Regional
+  timezone        String   @default("Africa/Accra")
+  currency        String   @default("GHS")
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

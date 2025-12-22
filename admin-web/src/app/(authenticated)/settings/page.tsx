@@ -117,7 +117,25 @@ export default function SettingsPage() {
     const fetchData = async () => {
         setLoading(true);
         try {
-            if (activeTab === 'templates') {
+            if (activeTab === 'general') {
+                try {
+                    const { data } = await api.get('/settings');
+                    setOrgSettings({
+                        name: data.name || 'Higher Life Chapel',
+                        address: data.address || '',
+                        phone: data.officePhone || '+233 XX XXX XXXX',
+                        pastorPhone: data.pastorPhone || '+233 XX XXX XXXX',
+                        prayerLine: data.prayerLinePhone || '+233 XX XXX XXXX',
+                        email: data.adminEmail || 'admin@higherlifechapel.org',
+                        supportEmail: data.supportEmail || 'support@higherlifechapel.org',
+                        website: data.website || 'www.higherlifechapel.org',
+                        timezone: data.timezone || 'Africa/Accra',
+                        currency: data.currency || 'GHS',
+                    });
+                } catch (e) {
+                    console.log('Settings not found, using defaults');
+                }
+            } else if (activeTab === 'templates') {
                 const { data } = await api.get('/services/templates');
                 setTemplates(data);
             } else if (activeTab === 'departments') {
@@ -138,6 +156,27 @@ export default function SettingsPage() {
             console.error(e);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Save organization settings
+    const handleSaveSettings = async () => {
+        try {
+            await api.patch('/settings', {
+                name: orgSettings.name,
+                address: orgSettings.address,
+                website: orgSettings.website,
+                officePhone: orgSettings.phone,
+                pastorPhone: orgSettings.pastorPhone,
+                prayerLinePhone: orgSettings.prayerLine,
+                adminEmail: orgSettings.email,
+                supportEmail: orgSettings.supportEmail,
+                timezone: orgSettings.timezone,
+                currency: orgSettings.currency,
+            });
+            toast.success('Settings saved successfully!');
+        } catch (error) {
+            toast.error('Failed to save settings');
         }
     };
 
@@ -435,7 +474,7 @@ export default function SettingsPage() {
                                         </div>
 
                                         <div className="flex justify-end pt-4 border-t" style={{ borderColor: 'var(--border)' }}>
-                                            <button className="btn-primary flex items-center gap-2">
+                                            <button onClick={handleSaveSettings} className="btn-primary flex items-center gap-2">
                                                 <Save className="w-4 h-4" />
                                                 Save Changes
                                             </button>
