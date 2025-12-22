@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
     View,
     Text,
@@ -7,7 +7,10 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     RefreshControl,
-    Alert,
+    Animated,
+    Dimensions,
+    Modal,
+    ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
@@ -19,10 +22,17 @@ import {
     AlertCircle,
     Info,
     CheckCircle,
-    Clock,
+    Megaphone,
+    Calendar,
+    Heart,
+    X,
+    ChevronRight,
+    Sparkles,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import client from '../api/client';
+
+const { width } = Dimensions.get('window');
 
 interface Notification {
     id: string;
@@ -41,9 +51,27 @@ export default function InboxScreen({ navigation }: any) {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+    const [showDetailModal, setShowDetailModal] = useState(false);
+
+    // Animations
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(30)).current;
 
     useEffect(() => {
         fetchNotifications();
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 500,
+                useNativeDriver: true,
+            }),
+        ]).start();
     }, []);
 
     const fetchNotifications = async () => {
@@ -56,7 +84,6 @@ export default function InboxScreen({ navigation }: any) {
             setUnreadCount(countResponse.data);
         } catch (error) {
             console.error('Failed to fetch notifications:', error);
-            Alert.alert('Error', 'Failed to load messages');
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -87,7 +114,6 @@ export default function InboxScreen({ navigation }: any) {
             setUnreadCount(0);
         } catch (error) {
             console.error('Failed to mark all as read:', error);
-            Alert.alert('Error', 'Failed to mark all messages as read');
         }
     };
 
@@ -95,20 +121,40 @@ export default function InboxScreen({ navigation }: any) {
         if (!notification.read) {
             markAsRead(notification.id);
         }
-        // Show full message in an alert for now
-        Alert.alert(notification.title, notification.message, [{ text: 'OK' }]);
+        setSelectedNotification(notification);
+        setShowDetailModal(true);
     };
 
-    const getTypeIcon = (type: string) => {
+    const getTypeConfig = (type: string) => {
         switch (type) {
             case 'success':
-                return <CheckCircle size={20} color={colors.success} />;
+                return {
+                    icon: <CheckCircle size={22} color="#10b981" />,
+                    color: '#10b981',
+                    bg: '#10b98115',
+                    label: 'Success'
+                };
             case 'warning':
-                return <AlertCircle size={20} color={colors.warning} />;
+                return {
+                    icon: <AlertCircle size={22} color="#f59e0b" />,
+                    color: '#f59e0b',
+                    bg: '#f59e0b15',
+                    label: 'Alert'
+                };
             case 'error':
-                return <AlertCircle size={20} color={colors.error} />;
+                return {
+                    icon: <AlertCircle size={22} color="#ef4444" />,
+                    color: '#ef4444',
+                    bg: '#ef444415',
+                    label: 'Important'
+                };
             default:
-                return <Info size={20} color={colors.info} />;
+                return {
+                    icon: <Megaphone size={22} color="#6366f1" />,
+                    color: '#6366f1',
+                    bg: '#6366f115',
+                    label: 'Announcement'
+                };
         }
     };
 
@@ -116,86 +162,144 @@ export default function InboxScreen({ navigation }: any) {
         const date = new Date(dateStr);
         const now = new Date();
         const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / (1000 * 60));
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-        if (diffHours < 1) {
+        if (diffMins < 1) {
             return 'Just now';
+        } else if (diffMins < 60) {
+            return `${diffMins}m ago`;
         } else if (diffHours < 24) {
             return `${diffHours}h ago`;
         } else if (diffDays < 7) {
             return `${diffDays}d ago`;
         } else {
-            return date.toLocaleDateString();
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
     };
 
-    const renderNotification = ({ item }: { item: Notification }) => (
-        <TouchableOpacity
-            style={[
-                styles.notificationCard,
-                {
-                    backgroundColor: item.read ? colors.card : colors.surface,
-                    borderLeftColor: item.read ? colors.border : colors.primary,
-                    borderLeftWidth: item.read ? 0 : 4,
-                },
-            ]}
-            onPress={() => handleNotificationPress(item)}
-            activeOpacity={0.7}
-        >
-            <View style={styles.notificationContent}>
-                <View style={styles.notificationHeader}>
-                    <View style={styles.iconContainer}>
-                        {item.read ? (
-                            <MailOpen size={20} color={colors.textMuted} />
-                        ) : (
-                            <Mail size={20} color={colors.primary} />
-                        )}
+    const formatFullDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const renderNotification = ({ item, index }: { item: Notification; index: number }) => {
+        const typeConfig = getTypeConfig(item.type);
+
+        return (
+            <Animated.View
+                style={{
+                    opacity: fadeAnim,
+                    transform: [{ translateY: slideAnim }],
+                }}
+            >
+                <TouchableOpacity
+                    style={[
+                        styles.notificationCard,
+                        {
+                            backgroundColor: colors.card,
+                            borderColor: item.read ? colors.border : typeConfig.color + '40',
+                            borderWidth: item.read ? 1 : 2,
+                        },
+                    ]}
+                    onPress={() => handleNotificationPress(item)}
+                    activeOpacity={0.7}
+                >
+                    {/* Unread Indicator */}
+                    {!item.read && (
+                        <View style={[styles.unreadIndicator, { backgroundColor: typeConfig.color }]} />
+                    )}
+
+                    {/* Icon Container */}
+                    <View style={[styles.iconContainer, { backgroundColor: typeConfig.bg }]}>
+                        {typeConfig.icon}
                     </View>
-                    <View style={styles.headerText}>
+
+                    {/* Content */}
+                    <View style={styles.contentContainer}>
+                        <View style={styles.titleRow}>
+                            <Text
+                                style={[
+                                    styles.notificationTitle,
+                                    {
+                                        color: colors.text,
+                                        fontWeight: item.read ? '500' : '700',
+                                    },
+                                ]}
+                                numberOfLines={1}
+                            >
+                                {item.title}
+                            </Text>
+                            {!item.read && (
+                                <View style={[styles.newBadge, { backgroundColor: typeConfig.color }]}>
+                                    <Text style={styles.newBadgeText}>NEW</Text>
+                                </View>
+                            )}
+                        </View>
+
                         <Text
                             style={[
-                                styles.notificationTitle,
-                                {
-                                    color: colors.text,
-                                    fontWeight: item.read ? '500' : '700',
-                                },
+                                styles.notificationMessage,
+                                { color: item.read ? colors.textMuted : colors.textSecondary },
                             ]}
-                            numberOfLines={1}
+                            numberOfLines={2}
                         >
-                            {item.title}
+                            {item.message}
                         </Text>
+
                         <View style={styles.metaRow}>
-                            {getTypeIcon(item.type)}
+                            <View style={[styles.typeBadge, { backgroundColor: typeConfig.bg }]}>
+                                <Text style={[styles.typeBadgeText, { color: typeConfig.color }]}>
+                                    {typeConfig.label}
+                                </Text>
+                            </View>
                             <Text style={[styles.timestamp, { color: colors.textMuted }]}>
                                 {formatTime(item.createdAt)}
                             </Text>
                         </View>
                     </View>
-                    {!item.read && (
-                        <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />
-                    )}
-                </View>
-                <Text
-                    style={[
-                        styles.notificationMessage,
-                        { color: item.read ? colors.textMuted : colors.textSecondary },
-                    ]}
-                    numberOfLines={2}
-                >
-                    {item.message}
-                </Text>
-            </View>
-        </TouchableOpacity>
-    );
+
+                    {/* Chevron */}
+                    <ChevronRight size={18} color={colors.textMuted} style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
+            </Animated.View>
+        );
+    };
 
     const renderEmptyState = () => (
         <View style={styles.emptyState}>
-            <Bell size={64} color={colors.textMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>No Messages</Text>
+            <LinearGradient
+                colors={['#6366f115', '#8b5cf615']}
+                style={styles.emptyIconContainer}
+            >
+                <Bell size={48} color="#6366f1" />
+            </LinearGradient>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>Your Inbox is Empty</Text>
             <Text style={[styles.emptySubtitle, { color: colors.textMuted }]}>
-                Messages from the church will appear here
+                Messages and announcements from{'\n'}the church will appear here
             </Text>
+            <View style={styles.emptyFeatures}>
+                {[
+                    { icon: <Megaphone size={16} color="#6366f1" />, text: 'Announcements' },
+                    { icon: <Calendar size={16} color="#10b981" />, text: 'Event Reminders' },
+                    { icon: <Heart size={16} color="#ef4444" />, text: 'Personal Messages' },
+                ].map((feature, i) => (
+                    <View key={i} style={[styles.featureItem, { backgroundColor: colors.surface }]}>
+                        {feature.icon}
+                        <Text style={[styles.featureText, { color: colors.textSecondary }]}>
+                            {feature.text}
+                        </Text>
+                    </View>
+                ))}
+            </View>
         </View>
     );
 
@@ -204,6 +308,9 @@ export default function InboxScreen({ navigation }: any) {
             <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={[styles.loadingText, { color: colors.textMuted }]}>
+                        Loading messages...
+                    </Text>
                 </View>
             </SafeAreaView>
         );
@@ -211,31 +318,62 @@ export default function InboxScreen({ navigation }: any) {
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-            {/* Header */}
+            {/* Premium Header */}
             <LinearGradient
-                colors={[colors.primary, colors.primaryDark]}
+                colors={theme.gradients.primary}
                 style={styles.header}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
             >
+                {/* Decorative Elements */}
+                <View style={styles.headerDecor1} />
+                <View style={styles.headerDecor2} />
+
                 <View style={styles.headerContent}>
-                    <View>
-                        <Text style={styles.headerTitle}>Inbox</Text>
+                    <View style={styles.headerLeft}>
+                        <View style={styles.headerTitleRow}>
+                            <Text style={styles.headerTitle}>Inbox</Text>
+                            {unreadCount > 0 && (
+                                <View style={styles.unreadBadge}>
+                                    <Text style={styles.unreadBadgeText}>{unreadCount}</Text>
+                                </View>
+                            )}
+                        </View>
                         <Text style={styles.headerSubtitle}>
                             {unreadCount > 0
-                                ? `${unreadCount} unread message${unreadCount > 1 ? 's' : ''}`
-                                : 'All caught up!'}
+                                ? `You have ${unreadCount} new message${unreadCount > 1 ? 's' : ''}`
+                                : 'All caught up! ✨'}
                         </Text>
                     </View>
+
                     {unreadCount > 0 && (
                         <TouchableOpacity
                             style={styles.markAllButton}
                             onPress={markAllAsRead}
+                            activeOpacity={0.8}
                         >
-                            <CheckCheck size={18} color="#fff" />
-                            <Text style={styles.markAllText}>Read All</Text>
+                            <CheckCheck size={16} color="#fff" />
+                            <Text style={styles.markAllText}>Mark All Read</Text>
                         </TouchableOpacity>
                     )}
+                </View>
+
+                {/* Stats Row */}
+                <View style={styles.statsRow}>
+                    <View style={styles.statItem}>
+                        <Text style={styles.statValue}>{notifications.length}</Text>
+                        <Text style={styles.statLabel}>Total</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                        <Text style={styles.statValue}>{unreadCount}</Text>
+                        <Text style={styles.statLabel}>Unread</Text>
+                    </View>
+                    <View style={styles.statDivider} />
+                    <View style={styles.statItem}>
+                        <Text style={styles.statValue}>{notifications.length - unreadCount}</Text>
+                        <Text style={styles.statLabel}>Read</Text>
+                    </View>
                 </View>
             </LinearGradient>
 
@@ -258,7 +396,88 @@ export default function InboxScreen({ navigation }: any) {
                     />
                 }
                 ListEmptyComponent={renderEmptyState}
+                ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
             />
+
+            {/* Detail Modal */}
+            <Modal
+                visible={showDetailModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowDetailModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+                        <View style={styles.modalHandle} />
+
+                        {selectedNotification && (
+                            <>
+                                {/* Modal Header */}
+                                <View style={styles.modalHeader}>
+                                    <View style={[
+                                        styles.modalTypeIcon,
+                                        { backgroundColor: getTypeConfig(selectedNotification.type).bg }
+                                    ]}>
+                                        {getTypeConfig(selectedNotification.type).icon}
+                                    </View>
+                                    <TouchableOpacity
+                                        onPress={() => setShowDetailModal(false)}
+                                        style={[styles.closeButton, { backgroundColor: colors.inputBackground }]}
+                                    >
+                                        <X size={20} color={colors.textSecondary} />
+                                    </TouchableOpacity>
+                                </View>
+
+                                {/* Modal Body */}
+                                <ScrollView showsVerticalScrollIndicator={false}>
+                                    <Text style={[styles.modalTitle, { color: colors.text }]}>
+                                        {selectedNotification.title}
+                                    </Text>
+
+                                    <View style={styles.modalMeta}>
+                                        <View style={[
+                                            styles.modalTypeBadge,
+                                            { backgroundColor: getTypeConfig(selectedNotification.type).bg }
+                                        ]}>
+                                            <Text style={[
+                                                styles.modalTypeBadgeText,
+                                                { color: getTypeConfig(selectedNotification.type).color }
+                                            ]}>
+                                                {getTypeConfig(selectedNotification.type).label}
+                                            </Text>
+                                        </View>
+                                        <Text style={[styles.modalDate, { color: colors.textMuted }]}>
+                                            {formatFullDate(selectedNotification.createdAt)}
+                                        </Text>
+                                    </View>
+
+                                    <View style={[styles.modalDivider, { backgroundColor: colors.border }]} />
+
+                                    <Text style={[styles.modalMessage, { color: colors.textSecondary }]}>
+                                        {selectedNotification.message}
+                                    </Text>
+                                </ScrollView>
+
+                                {/* Modal Footer */}
+                                <TouchableOpacity
+                                    onPress={() => setShowDetailModal(false)}
+                                    style={styles.modalDismissBtn}
+                                    activeOpacity={0.9}
+                                >
+                                    <LinearGradient
+                                        colors={theme.gradients.primary}
+                                        style={styles.modalDismissBtnGradient}
+                                        start={{ x: 0, y: 0 }}
+                                        end={{ x: 1, y: 0 }}
+                                    >
+                                        <Text style={styles.modalDismissBtnText}>Dismiss</Text>
+                                    </LinearGradient>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </View>
+                </View>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -271,108 +490,330 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        gap: 12,
+    },
+    loadingText: {
+        fontSize: 14,
+        fontFamily: 'PlusJakartaSans-Medium',
     },
     header: {
         paddingHorizontal: 20,
-        paddingVertical: 20,
-        paddingTop: 10,
+        paddingVertical: 24,
+        paddingTop: 16,
+        borderBottomLeftRadius: 28,
+        borderBottomRightRadius: 28,
+        overflow: 'hidden',
+    },
+    headerDecor1: {
+        position: 'absolute',
+        top: -40,
+        right: -40,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+    },
+    headerDecor2: {
+        position: 'absolute',
+        bottom: -20,
+        left: -30,
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: 'rgba(255,255,255,0.05)',
     },
     headerContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 20,
+    },
+    headerLeft: {},
+    headerTitleRow: {
+        flexDirection: 'row',
         alignItems: 'center',
+        gap: 10,
     },
     headerTitle: {
-        fontSize: 28,
-        fontWeight: '700',
+        fontSize: 32,
+        fontFamily: 'PlusJakartaSans-Bold',
         color: '#fff',
+        letterSpacing: -0.5,
+    },
+    unreadBadge: {
+        backgroundColor: '#ef4444',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+        minWidth: 28,
+        alignItems: 'center',
+    },
+    unreadBadgeText: {
+        color: '#fff',
+        fontSize: 14,
+        fontFamily: 'PlusJakartaSans-Bold',
     },
     headerSubtitle: {
         fontSize: 14,
-        color: 'rgba(255,255,255,0.7)',
-        marginTop: 4,
+        fontFamily: 'PlusJakartaSans-Medium',
+        color: 'rgba(255,255,255,0.75)',
+        marginTop: 6,
     },
     markAllButton: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: 'rgba(255,255,255,0.2)',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 20,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 12,
         gap: 6,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.2)',
     },
     markAllText: {
         color: '#fff',
         fontSize: 13,
-        fontWeight: '600',
+        fontFamily: 'PlusJakartaSans-SemiBold',
+    },
+    statsRow: {
+        flexDirection: 'row',
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderRadius: 16,
+        padding: 16,
+        justifyContent: 'space-around',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)',
+    },
+    statItem: {
+        alignItems: 'center',
+        flex: 1,
+    },
+    statValue: {
+        fontSize: 24,
+        fontFamily: 'PlusJakartaSans-Bold',
+        color: '#fff',
+    },
+    statLabel: {
+        fontSize: 12,
+        fontFamily: 'PlusJakartaSans-Medium',
+        color: 'rgba(255,255,255,0.7)',
+        marginTop: 2,
+    },
+    statDivider: {
+        width: 1,
+        height: '100%',
+        backgroundColor: 'rgba(255,255,255,0.2)',
     },
     listContent: {
         padding: 16,
-        paddingBottom: 32,
+        paddingBottom: 100,
     },
     emptyListContent: {
         flex: 1,
     },
     notificationCard: {
-        borderRadius: 12,
-        marginBottom: 12,
-        padding: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    notificationContent: {},
-    notificationHeader: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
-        marginBottom: 8,
+        alignItems: 'center',
+        borderRadius: 16,
+        padding: 16,
+        overflow: 'hidden',
+    },
+    unreadIndicator: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: 4,
+        borderTopLeftRadius: 16,
+        borderBottomLeftRadius: 16,
     },
     iconContainer: {
-        marginRight: 12,
-        marginTop: 2,
+        width: 48,
+        height: 48,
+        borderRadius: 14,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 14,
     },
-    headerText: {
+    contentContainer: {
         flex: 1,
+    },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 4,
     },
     notificationTitle: {
         fontSize: 16,
-        marginBottom: 4,
+        fontFamily: 'PlusJakartaSans-SemiBold',
+        flex: 1,
+    },
+    newBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 6,
+    },
+    newBadgeText: {
+        color: '#fff',
+        fontSize: 10,
+        fontFamily: 'PlusJakartaSans-Bold',
+        letterSpacing: 0.5,
+    },
+    notificationMessage: {
+        fontSize: 14,
+        fontFamily: 'PlusJakartaSans-Regular',
+        lineHeight: 20,
+        marginBottom: 8,
     },
     metaRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 6,
+        gap: 10,
+    },
+    typeBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 6,
+    },
+    typeBadgeText: {
+        fontSize: 11,
+        fontFamily: 'PlusJakartaSans-SemiBold',
     },
     timestamp: {
         fontSize: 12,
-    },
-    unreadDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        marginLeft: 8,
-    },
-    notificationMessage: {
-        fontSize: 14,
-        lineHeight: 20,
-        marginLeft: 32,
+        fontFamily: 'PlusJakartaSans-Regular',
     },
     emptyState: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 60,
+        paddingHorizontal: 32,
+    },
+    emptyIconContainer: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 24,
     },
     emptyTitle: {
-        fontSize: 20,
-        fontWeight: '600',
-        marginTop: 16,
+        fontSize: 22,
+        fontFamily: 'PlusJakartaSans-Bold',
+        marginBottom: 8,
     },
     emptySubtitle: {
-        fontSize: 14,
-        marginTop: 8,
+        fontSize: 15,
+        fontFamily: 'PlusJakartaSans-Regular',
         textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 32,
+    },
+    emptyFeatures: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 12,
+    },
+    featureItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 20,
+        gap: 8,
+    },
+    featureText: {
+        fontSize: 13,
+        fontFamily: 'PlusJakartaSans-Medium',
+    },
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        padding: 24,
+        maxHeight: '75%',
+    },
+    modalHandle: {
+        width: 40,
+        height: 4,
+        backgroundColor: 'rgba(0,0,0,0.15)',
+        borderRadius: 2,
+        alignSelf: 'center',
+        marginBottom: 20,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    modalTypeIcon: {
+        width: 56,
+        height: 56,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    closeButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontFamily: 'PlusJakartaSans-Bold',
+        marginBottom: 12,
+        letterSpacing: -0.5,
+    },
+    modalMeta: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        marginBottom: 20,
+    },
+    modalTypeBadge: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+    },
+    modalTypeBadgeText: {
+        fontSize: 13,
+        fontFamily: 'PlusJakartaSans-SemiBold',
+    },
+    modalDate: {
+        fontSize: 13,
+        fontFamily: 'PlusJakartaSans-Regular',
+    },
+    modalDivider: {
+        height: 1,
+        marginBottom: 20,
+    },
+    modalMessage: {
+        fontSize: 16,
+        fontFamily: 'PlusJakartaSans-Regular',
+        lineHeight: 26,
+    },
+    modalDismissBtn: {
+        marginTop: 24,
+    },
+    modalDismissBtnGradient: {
+        paddingVertical: 16,
+        borderRadius: 14,
+        alignItems: 'center',
+    },
+    modalDismissBtnText: {
+        color: '#fff',
+        fontSize: 16,
+        fontFamily: 'PlusJakartaSans-Bold',
     },
 });
