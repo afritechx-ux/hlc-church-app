@@ -17,7 +17,7 @@
     "axios": "^1.13.2",
     "d3-scale": "^4.0.2",
     "d3-shape": "^3.2.0",
-    "expo": "~54.0.29",
+    "expo": "~54.0.30",
     "expo-camera": "~17.0.10",
     "expo-constants": "~18.0.10",
     "expo-device": "~8.0.10",

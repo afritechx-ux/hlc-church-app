@@ -103,6 +103,10 @@ export default function GivingScreen() {
     const [paymentMethod, setPaymentMethod] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
+    // History and Pledges modal state
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [showPledgesModal, setShowPledgesModal] = useState(false);
+
     useEffect(() => {
         fetchData();
         Animated.timing(fadeAnim, {
@@ -283,14 +287,14 @@ export default function GivingScreen() {
                         <Text style={[styles.actionLabel, { color: colors.text }]}>Give Now</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => { }}>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => setShowPledgesModal(true)}>
                         <View style={[styles.actionIcon, { backgroundColor: colors.primary + '15' }]}>
                             <Target size={24} color={colors.primary} />
                         </View>
                         <Text style={[styles.actionLabel, { color: colors.text }]}>Pledges</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionBtn} onPress={() => { }}>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => setShowHistoryModal(true)}>
                         <View style={[styles.actionIcon, { backgroundColor: colors.success + '15' }]}>
                             <Gift size={24} color={colors.success} />
                         </View>
@@ -564,6 +568,114 @@ export default function GivingScreen() {
                                     </>
                                 )}
                             </LinearGradient>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* History Modal */}
+            <Modal
+                visible={showHistoryModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowHistoryModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface, maxHeight: '80%' }]}>
+                        <View style={styles.modalHandle} />
+
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: colors.text }]}>Giving History</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowHistoryModal(false)}
+                                style={[styles.closeButton, { backgroundColor: colors.inputBackground }]}
+                            >
+                                <X size={20} color={colors.textSecondary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView showsVerticalScrollIndicator={false}>
+                            {donations.length > 0 ? (
+                                donations.map((donation) => (
+                                    <View key={donation.id} style={[styles.historyRow, { backgroundColor: colors.inputBackground }]}>
+                                        <View style={[styles.historyIcon, { backgroundColor: colors.success + '15' }]}>
+                                            <DollarSign size={18} color={colors.success} />
+                                        </View>
+                                        <View style={styles.historyContent}>
+                                            <Text style={[styles.historyTitle, { color: colors.text }]}>{donation.fund?.name || 'General'}</Text>
+                                            <Text style={[styles.historyDate, { color: colors.textSecondary }]}>
+                                                {new Date(donation.date).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                })}
+                                            </Text>
+                                            <Text style={[styles.historyMethod, { color: colors.textMuted }]}>
+                                                {donation.method || 'N/A'}
+                                            </Text>
+                                        </View>
+                                        <Text style={[styles.historyAmount, { color: colors.success }]}>
+                                            +GHS {Number(donation.amount).toFixed(2)}
+                                        </Text>
+                                    </View>
+                                ))
+                            ) : (
+                                <View style={styles.emptyState}>
+                                    <Gift size={48} color={colors.textMuted} />
+                                    <Text style={[styles.emptyTitle, { color: colors.text }]}>No Giving Records</Text>
+                                    <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                                        Your giving history will appear here once you make your first donation.
+                                    </Text>
+                                </View>
+                            )}
+                        </ScrollView>
+
+                        {donations.length > 0 && (
+                            <View style={[styles.historyTotal, { borderTopColor: colors.border }]}>
+                                <Text style={[styles.totalLabel, { color: colors.textSecondary }]}>Total Contributions</Text>
+                                <Text style={[styles.totalAmount, { color: colors.primary }]}>
+                                    GHS {totalGiving.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Pledges Modal */}
+            <Modal
+                visible={showPledgesModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowPledgesModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+                        <View style={styles.modalHandle} />
+
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: colors.text }]}>Pledges</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowPledgesModal(false)}
+                                style={[styles.closeButton, { backgroundColor: colors.inputBackground }]}
+                            >
+                                <X size={20} color={colors.textSecondary} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.emptyState}>
+                            <Target size={48} color={colors.primary} />
+                            <Text style={[styles.emptyTitle, { color: colors.text }]}>Coming Soon</Text>
+                            <Text style={[styles.emptySubtitle, { color: colors.textSecondary, textAlign: 'center' }]}>
+                                The pledges feature is currently under development. Soon you'll be able to make and track pledges for specific funds and goals.
+                            </Text>
+                        </View>
+
+                        <TouchableOpacity
+                            onPress={() => setShowPledgesModal(false)}
+                            style={[styles.pledgeCloseBtn, { backgroundColor: colors.primary }]}
+                        >
+                            <Text style={styles.pledgeCloseBtnText}>Got it</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -949,5 +1061,88 @@ const styles = StyleSheet.create({
     },
     noFundsMessage: { padding: 16, borderRadius: 12 },
     noFundsText: { textAlign: 'center' },
+    // History modal styles
+    historyRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 14,
+        borderRadius: 12,
+        marginBottom: 10,
+    },
+    historyIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    historyContent: {
+        flex: 1,
+    },
+    historyTitle: {
+        fontSize: 15,
+        fontFamily: 'PlusJakartaSans-SemiBold',
+    },
+    historyDate: {
+        fontSize: 12,
+        fontFamily: 'PlusJakartaSans-Regular',
+        marginTop: 2,
+    },
+    historyMethod: {
+        fontSize: 11,
+        fontFamily: 'PlusJakartaSans-Regular',
+        marginTop: 2,
+    },
+    historyAmount: {
+        fontSize: 16,
+        fontFamily: 'PlusJakartaSans-Bold',
+    },
+    historyTotal: {
+        borderTopWidth: 1,
+        paddingTop: 16,
+        marginTop: 16,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    totalLabel: {
+        fontSize: 14,
+        fontFamily: 'PlusJakartaSans-Medium',
+    },
+    totalAmount: {
+        fontSize: 20,
+        fontFamily: 'PlusJakartaSans-Bold',
+    },
+    // Empty state styles
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 40,
+        paddingHorizontal: 20,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontFamily: 'PlusJakartaSans-Bold',
+        marginTop: 16,
+    },
+    emptySubtitle: {
+        fontSize: 14,
+        fontFamily: 'PlusJakartaSans-Regular',
+        marginTop: 8,
+        lineHeight: 20,
+    },
+    // Pledges modal styles
+    pledgeCloseBtn: {
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 20,
+    },
+    pledgeCloseBtnText: {
+        color: '#fff',
+        fontSize: 16,
+        fontFamily: 'PlusJakartaSans-Bold',
+    },
 });
 
