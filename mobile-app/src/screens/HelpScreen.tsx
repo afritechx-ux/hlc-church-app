@@ -28,17 +28,36 @@ export default function HelpScreen({ navigation }: any) {
     const { theme } = useTheme();
     const colors = theme.colors;
 
+    // Church contact numbers - can be configured
+    const CHURCH_CONTACTS = {
+        office: '+233244000000',
+        pastor: '+233244000001',
+        prayerLine: '+233244000002',
+        email: 'support@higherlifechapel.org',
+    };
+
     const handleEmail = () => {
-        Linking.openURL('mailto:support@higherlifechapel.org?subject=App Support Request');
+        Linking.openURL(`mailto:${CHURCH_CONTACTS.email}?subject=App Support Request`);
     };
 
     const handlePhone = () => {
         Alert.alert(
-            'Call Support',
-            'Would you like to call church support?',
+            '📞 Call Church',
+            'Select who you would like to call:',
             [
+                {
+                    text: '🏢 Church Office',
+                    onPress: () => Linking.openURL(`tel:${CHURCH_CONTACTS.office}`)
+                },
+                {
+                    text: '👨‍💼 Pastor\'s Line',
+                    onPress: () => Linking.openURL(`tel:${CHURCH_CONTACTS.pastor}`)
+                },
+                {
+                    text: '🙏 Emergency Prayer',
+                    onPress: () => Linking.openURL(`tel:${CHURCH_CONTACTS.prayerLine}`)
+                },
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Call', onPress: () => Linking.openURL('tel:+233000000000') },
             ]
         );
     };
