@@ -1,9 +1,9 @@
 import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
 import { SettingsService } from './settings.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { Public } from '../auth/decorators/public.decorator';
+import { AtGuard } from '../common/guards';
+import { RolesGuard } from '../common/guards';
+import { Roles } from '../common/decorators';
+import { Public } from '../common/decorators';
 
 @Controller('settings')
 export class SettingsController {
@@ -11,7 +11,7 @@ export class SettingsController {
 
     // Admin endpoint - get all settings
     @Get()
-    @UseGuards(JwtAuthGuard, RolesGuard)
+    @UseGuards(AtGuard, RolesGuard)
     @Roles('SUPER_ADMIN', 'ADMIN')
     async getSettings() {
         return this.settingsService.getSettings();
@@ -19,7 +19,7 @@ export class SettingsController {
 
     // Admin endpoint - update settings
     @Patch()
-    @UseGuards(JwtAuthGuard, RolesGuard)
+    @UseGuards(AtGuard, RolesGuard)
     @Roles('SUPER_ADMIN', 'ADMIN')
     async updateSettings(@Body() data: {
         name?: string;
