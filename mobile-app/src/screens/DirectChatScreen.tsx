@@ -12,6 +12,7 @@ import {
     Alert,
     Image,
     ActionSheetIOS,
+    Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
@@ -157,11 +158,31 @@ export default function DirectChatScreen({ navigation, route }: any) {
     };
 
     const handleCall = (type: 'voice' | 'video') => {
-        Alert.alert(
-            'Coming Soon',
-            `${type === 'voice' ? 'Voice' : 'Video'} calling will be available in a future update!`,
-            [{ text: 'OK' }]
-        );
+        if (type === 'voice') {
+            Alert.alert(
+                '📞 Voice Call',
+                `Would you like to call ${otherParticipant.name}?`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Call Church Office',
+                        onPress: () => Linking.openURL('tel:+233244000000')
+                    },
+                ]
+            );
+        } else {
+            Alert.alert(
+                '📹 Video Call',
+                'Video calling feature is coming soon! In the meantime, you can continue chatting here or call the church office.',
+                [
+                    { text: 'OK' },
+                    {
+                        text: 'Call Office Instead',
+                        onPress: () => Linking.openURL('tel:+233244000000')
+                    },
+                ]
+            );
+        }
     };
 
     const handleEmojiSelect = (emoji: string) => {
