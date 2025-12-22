@@ -49,6 +49,7 @@ const TABS = [
     { id: 'departments', label: 'Departments', icon: Users2 },
     { id: 'users', label: 'User Management', icon: UserCog },
     { id: 'security', label: 'Security', icon: Shield },
+    { id: 'messaging', label: 'Messaging Config', icon: Mail },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'automations', label: 'Automations', icon: Zap },
 ];
@@ -82,6 +83,12 @@ export default function SettingsPage() {
         website: 'www.higherlifechapel.org',
         timezone: 'Africa/Accra',
         currency: 'GHS',
+        smtpHost: '',
+        smtpPort: 587,
+        smtpUser: '',
+        smtpPass: '',
+        smsApiKey: '',
+        smsSenderId: 'HLAG Church',
     });
 
     // Notification settings
@@ -131,6 +138,12 @@ export default function SettingsPage() {
                         website: data.website || 'www.higherlifechapel.org',
                         timezone: data.timezone || 'Africa/Accra',
                         currency: data.currency || 'GHS',
+                        smtpHost: data.smtpHost || '',
+                        smtpPort: data.smtpPort || 587,
+                        smtpUser: data.smtpUser || '',
+                        smtpPass: data.smtpPass || '',
+                        smsApiKey: data.smsApiKey || '',
+                        smsSenderId: data.smsSenderId || 'HLAG Church',
                     });
                 } catch (e) {
                     console.log('Settings not found, using defaults');
@@ -173,6 +186,12 @@ export default function SettingsPage() {
                 supportEmail: orgSettings.supportEmail,
                 timezone: orgSettings.timezone,
                 currency: orgSettings.currency,
+                smtpHost: orgSettings.smtpHost,
+                smtpPort: orgSettings.smtpPort,
+                smtpUser: orgSettings.smtpUser,
+                smtpPass: orgSettings.smtpPass,
+                smsApiKey: orgSettings.smsApiKey,
+                smsSenderId: orgSettings.smsSenderId,
             });
             toast.success('Settings saved successfully!');
         } catch (error) {
@@ -878,6 +897,134 @@ export default function SettingsPage() {
                                         <button className="btn-primary flex items-center gap-2">
                                             <Save className="w-4 h-4" />
                                             Save Security Settings
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            )}
+
+                            {/* Messaging Settings */}
+                            {activeTab === 'messaging' && (
+                                <motion.div
+                                    key="messaging"
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    className="space-y-6"
+                                >
+                                    <div>
+                                        <h3 className="text-xl font-bold mb-2" style={{ color: 'var(--foreground)' }}>
+                                            Messaging Configuration
+                                        </h3>
+                                        <p className="text-sm" style={{ color: 'var(--foreground-muted)' }}>
+                                            Configure Email (SMTP) and SMS credentials
+                                        </p>
+                                    </div>
+
+                                    {/* Email Settings */}
+                                    <div className="glass-card p-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Mail className="w-5 h-5 text-indigo-500" />
+                                            <h4 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>
+                                                Email (SMTP)
+                                            </h4>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                                                    SMTP Host
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    className="input-modern w-full"
+                                                    placeholder="smtp.example.com"
+                                                    value={orgSettings.smtpHost}
+                                                    onChange={(e) => setOrgSettings({ ...orgSettings, smtpHost: e.target.value })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                                                    SMTP Port
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    className="input-modern w-full"
+                                                    placeholder="587"
+                                                    value={orgSettings.smtpPort}
+                                                    onChange={(e) => setOrgSettings({ ...orgSettings, smtpPort: parseInt(e.target.value) })}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                                                    SMTP User
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    className="input-modern w-full"
+                                                    placeholder="user@example.com"
+                                                    value={orgSettings.smtpUser}
+                                                    onChange={(e) => setOrgSettings({ ...orgSettings, smtpUser: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                                                    SMTP Password
+                                                </label>
+                                                <div className="relative">
+                                                    <input
+                                                        type="password"
+                                                        className="input-modern w-full"
+                                                        placeholder="••••••••"
+                                                        value={orgSettings.smtpPass}
+                                                        onChange={(e) => setOrgSettings({ ...orgSettings, smtpPass: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* SMS Settings */}
+                                    <div className="glass-card p-6">
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Smartphone className="w-5 h-5 text-emerald-500" />
+                                            <h4 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>
+                                                SMS (Gateway)
+                                            </h4>
+                                        </div>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                                                    API Key
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    className="input-modern w-full"
+                                                    placeholder="Hubtel/Twilio/mNotify API Key"
+                                                    value={orgSettings.smsApiKey}
+                                                    onChange={(e) => setOrgSettings({ ...orgSettings, smsApiKey: e.target.value })}
+                                                />
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium mb-1" style={{ color: 'var(--foreground)' }}>
+                                                    Sender ID
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    className="input-modern w-full"
+                                                    placeholder="HLAG Church"
+                                                    value={orgSettings.smsSenderId}
+                                                    onChange={(e) => setOrgSettings({ ...orgSettings, smsSenderId: e.target.value })}
+                                                />
+                                                <p className="text-xs mt-1" style={{ color: 'var(--foreground-muted)' }}>
+                                                    Max 11 characters. Usually requires registration.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex justify-end pt-4">
+                                        <button onClick={handleSaveSettings} className="btn-primary flex items-center gap-2">
+                                            <Save className="w-4 h-4" />
+                                            Save Messaging Config
                                         </button>
                                     </div>
                                 </motion.div>
