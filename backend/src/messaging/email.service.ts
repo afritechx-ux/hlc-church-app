@@ -27,7 +27,7 @@ export class EmailService {
                     user: settings.smtpUser,
                     pass: settings.smtpPass,
                 },
-            });
+            } as any);
 
             await transporter.sendMail({
                 from: `"${settings.name}" <${settings.smtpUser}>`, // sender address
